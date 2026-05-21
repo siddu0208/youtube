@@ -777,422 +777,555 @@
     <!--              JAVASCRIPT                 -->
     <!-- ════════════════════════════════════════ -->
     <script>
-        // ── State ──
-        let videoData = null;
-        let currentUrl = '';
-        let downloadedFilename = '';
-        let progressInterval = null;
+// ── State ──
+let videoData = null;
+let currentUrl = '';
+let downloadedFilename = '';
+let progressInterval = null;
 
-        // ── Init ──
-        window.addEventListener('load', () => {
-            checkFFmpeg();
-            // Auto-focus input on desktop
-            if (window.innerWidth > 768) {
-                document.getElementById('youtube-url').focus();
-            }
-        });
+// ════════════════════════════════════════
+// Safe Fetch - Always returns JSON
+// ════════════════════════════════════════
+async function safeFetch(url, options = {}) {
+    try {
+        // Always set JSON headers
+        const defaultOptions = {
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            ...options
+        };
 
-        // ── Check FFmpeg ──
-        async function checkFFmpeg() {
-            try {
-                const res = await fetch('/api/check-ffmpeg');
-                const data = await res.json();
-                const el = document.getElementById('ffmpeg-status');
-                if (data.ffmpeg) {
-                    el.innerHTML = `
-                        <div class="w-2 h-2 bg-green-400 rounded-full"></div>
-                        <span class="text-green-400 text-xs sm:text-sm font-medium hidden sm:inline">FFmpeg Ready</span>
-                        <i class="fas fa-check text-green-400 text-xs sm:hidden"></i>
-                    `;
-                } else {
-                    el.innerHTML = `
-                        <div class="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
-                        <span class="text-red-400 text-xs sm:text-sm hidden sm:inline">FFmpeg Missing</span>
-                        <i class="fas fa-times text-red-400 text-xs sm:hidden"></i>
-                    `;
-                }
-            } catch(e) {}
+        // Merge headers if provided
+        if (options.headers) {
+            defaultOptions.headers = {
+                ...defaultOptions.headers,
+                ...options.headers
+            };
         }
 
-        // ── Fetch Video Info ──
-        async function fetchVideoInfo() {
-            const url = document.getElementById('youtube-url').value.trim();
+        console.log(`[FETCH] ${options.method || 'GET'} ${url}`);
 
-            if (!url) {
-                showToast('Please enter a YouTube URL', 'error');
-                document.getElementById('youtube-url').focus();
-                return;
-            }
-            if (!url.includes('youtube.com') && !url.includes('youtu.be')) {
-                showToast('Please enter a valid YouTube URL', 'error');
-                return;
-            }
+        const response = await fetch(url, defaultOptions);
 
-            currentUrl = url;
+        console.log(`[FETCH] Status: ${response.status}`);
+        console.log(`[FETCH] Content-Type: ${response.headers.get('content-type')}`);
 
-            // UI: loading state
-            hideAllSections();
-            show('loading');
-            setFetchBtn(true);
+        // Get response text first
+        const text = await response.text();
+        console.log(`[FETCH] Raw response: ${text.substring(0, 200)}`);
 
-            try {
-                const res = await fetch('/api/video-info', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url })
-                });
-                const data = await res.json();
-
-                hide('loading');
-                setFetchBtn(false);
-
-                if (data.success) {
-                    videoData = data;
-                    renderVideoInfo(data);
-                    show('video-info');
-                    showToast('Video info loaded!', 'success');
-                } else {
-                    showError(data.error || 'Failed to fetch video info');
-                }
-            } catch(err) {
-                hide('loading');
-                setFetchBtn(false);
-                showError('Network error: ' + err.message);
-            }
+        // Check if empty
+        if (!text || text.trim() === '') {
+            return {
+                success: false,
+                error: `Server returned empty response (HTTP ${response.status})`
+            };
         }
 
-        // ── Render Video Info ──
-        function renderVideoInfo(data) {
-            document.getElementById('thumbnail').src = data.thumbnail;
-            document.getElementById('video-title').textContent = data.title;
-            document.getElementById('video-author').textContent = data.author;
-            document.getElementById('video-duration').textContent = data.duration;
-            document.getElementById('video-views').textContent = data.views;
-            document.getElementById('duration-badge').textContent = data.duration;
+        // Try to parse JSON
+        try {
+            const json = JSON.parse(text);
+            return json;
+        } catch (parseError) {
+            console.error(`[FETCH] JSON parse error:`, parseError);
+            console.error(`[FETCH] Response was:`, text.substring(0, 500));
 
-            // Progressive streams
-            const progContainer = document.getElementById('progressive-streams');
-            progContainer.innerHTML = '';
-            if (data.progressive_streams.length === 0) {
-                progContainer.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">No progressive streams available</p>';
-            } else {
-                data.progressive_streams.reverse().forEach(s => {
-                    progContainer.innerHTML += buildStreamCard({
-                        icon: 'fas fa-video',
-                        iconColor: 'text-green-400',
-                        iconBg: 'bg-green-500/15',
-                        iconBorder: 'border-green-500/20',
-                        title: s.resolution,
-                        subtitle: `${s.fps}fps • MP4 • Audio ✅`,
-                        size: s.size,
-                        badge: '',
-                        btnClass: 'btn-primary',
-                        onclick: `downloadStream('progressive', ${s.itag}, null)`
-                    });
-                });
+            // Check common HTML error patterns
+            if (text.includes('<!DOCTYPE') || text.includes('<html')) {
+                const titleMatch = text.match(/<title>(.*?)<\/title>/i);
+                const title = titleMatch ? titleMatch[1] : 'Unknown HTML error';
+                return {
+                    success: false,
+                    error: `Server error: ${title} (HTTP ${response.status})`
+                };
             }
 
-            // HD streams
-            const hdContainer = document.getElementById('hd-streams');
-            hdContainer.innerHTML = '';
-            if (data.video_only_streams.length === 0) {
-                hdContainer.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">No HD streams available</p>';
-            } else {
-                data.video_only_streams.reverse().forEach(s => {
-                    const badge = s.resolution === '2160p' ? '🔥 4K' :
-                                  s.resolution === '1440p' ? '🔥 2K' :
-                                  s.resolution === '1080p' ? '🔥 HD' : '';
-                    hdContainer.innerHTML += buildStreamCard({
-                        icon: 'fas fa-fire',
-                        iconColor: 'text-red-400',
-                        iconBg: 'bg-red-500/15',
-                        iconBorder: 'border-red-500/20',
-                        title: `${s.resolution} ${badge}`,
-                        subtitle: `${s.fps}fps • MP4 • FFmpeg Merge`,
-                        size: s.size,
-                        badge: 'FFmpeg',
-                        btnClass: 'btn-primary',
-                        onclick: `downloadStream('hd', null, '${s.resolution}')`
-                    });
-                });
-            }
-
-            // Audio streams
-            const audioContainer = document.getElementById('audio-streams');
-            audioContainer.innerHTML = '';
-            if (data.audio_streams.length === 0) {
-                audioContainer.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">No audio streams available</p>';
-            } else {
-                data.audio_streams.reverse().forEach(s => {
-                    audioContainer.innerHTML += buildStreamCard({
-                        icon: 'fas fa-music',
-                        iconColor: 'text-purple-400',
-                        iconBg: 'bg-purple-500/15',
-                        iconBorder: 'border-purple-500/20',
-                        title: `${s.abr} Audio`,
-                        subtitle: `MP4 Audio • High Quality`,
-                        size: s.size,
-                        badge: '',
-                        btnClass: 'btn-purple',
-                        onclick: `downloadStream('audio', null, null)`
-                    });
-                });
-            }
-
-            showTab('progressive');
+            return {
+                success: false,
+                error: `Invalid response from server: ${text.substring(0, 100)}`
+            };
         }
 
-        // ── Build Stream Card HTML ──
-        function buildStreamCard({ icon, iconColor, iconBg, iconBorder, title, subtitle, size, btnClass, onclick }) {
-            return `
-                <div class="stream-card glass-dark rounded-xl p-3 sm:p-4 border border-white/8">
-                    <div class="flex flex-col xs:flex-row items-start xs:items-center gap-3 xs:gap-4">
-                        <!-- Icon -->
-                        <div class="w-10 h-10 sm:w-11 sm:h-11 ${iconBg} rounded-xl flex items-center justify-center border ${iconBorder} flex-shrink-0">
-                            <i class="${icon} ${iconColor} text-sm sm:text-base"></i>
-                        </div>
+    } catch (networkError) {
+        console.error(`[FETCH] Network error:`, networkError);
 
-                        <!-- Info -->
-                        <div class="flex-1 min-w-0">
-                            <p class="text-white font-bold text-sm sm:text-base">${title}</p>
-                            <p class="text-gray-500 text-xs mt-0.5">${subtitle}</p>
-                        </div>
+        if (networkError.name === 'TypeError' && networkError.message.includes('fetch')) {
+            return {
+                success: false,
+                error: 'Cannot connect to server. Is Flask running?'
+            };
+        }
 
-                        <!-- Size + Button -->
-                        <div class="stream-actions flex items-center gap-2 sm:gap-3 w-full xs:w-auto justify-between xs:justify-end">
-                            <span class="text-gray-400 text-xs sm:text-sm font-mono">${size} MB</span>
-                            <button
-                                onclick="${onclick}"
-                                class="${btnClass} px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold text-white flex items-center gap-1.5 whitespace-nowrap"
-                            >
-                                <i class="fas fa-download text-xs"></i>
-                                <span>Download</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
+        return {
+            success: false,
+            error: `Network error: ${networkError.message}`
+        };
+    }
+}
+
+// ════════════════════════════════════════
+// Init
+// ════════════════════════════════════════
+window.addEventListener('load', () => {
+    checkFFmpeg();
+    testAPI();
+    if (window.innerWidth > 768) {
+        document.getElementById('youtube-url').focus();
+    }
+});
+
+// ── Test API connection ──
+async function testAPI() {
+    console.log('[TEST] Testing API connection...');
+    const result = await safeFetch('/api/test');
+    console.log('[TEST] API result:', result);
+
+    if (!result.success) {
+        console.error('[TEST] API test failed:', result.error);
+    } else {
+        console.log('[TEST] ✓ API working!');
+        console.log('[TEST] FFmpeg:', result.ffmpeg);
+        console.log('[TEST] Download dir:', result.download_dir);
+    }
+}
+
+// ── Check FFmpeg ──
+async function checkFFmpeg() {
+    try {
+        const data = await safeFetch('/api/check-ffmpeg');
+        const el = document.getElementById('ffmpeg-status');
+
+        if (data && data.ffmpeg) {
+            el.innerHTML = `
+                <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+                <span class="text-green-400 text-xs sm:text-sm font-medium hidden sm:inline">FFmpeg Ready</span>
+            `;
+        } else {
+            el.innerHTML = `
+                <div class="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
+                <span class="text-red-400 text-xs sm:text-sm hidden sm:inline">FFmpeg Missing</span>
             `;
         }
+    } catch(e) {
+        console.error('[FFmpeg] Check failed:', e);
+    }
+}
 
-        // ── Download Stream ──
-        async function downloadStream(type, itag = null, quality = '1080p') {
-            if (!currentUrl) {
-                showToast('No video URL found', 'error');
-                return;
-            }
+// ════════════════════════════════════════
+// Fetch Video Info
+// ════════════════════════════════════════
+async function fetchVideoInfo() {
+    const urlInput = document.getElementById('youtube-url');
+    const url = urlInput.value.trim();
 
-            hideAllSections();
-            show('download-progress');
-            resetSteps();
+    if (!url) {
+        showToast('Please enter a YouTube URL', 'error');
+        urlInput.focus();
+        return;
+    }
 
-            const statusText = document.getElementById('download-status-text');
-            if (type === 'audio') statusText.textContent = 'Downloading audio stream...';
-            else if (type === 'hd') statusText.textContent = `Downloading ${quality} with FFmpeg merge...`;
-            else statusText.textContent = 'Downloading video with audio...';
+    if (!url.includes('youtube.com') && !url.includes('youtu.be')) {
+        showToast('Please enter a valid YouTube URL', 'error');
+        return;
+    }
 
-            // Start progress animation
-            startProgress(type);
+    currentUrl = url;
 
-            try {
-                const body = { url: currentUrl, type };
-                if (itag) body.itag = itag;
-                if (quality) body.quality = quality;
+    hideAllSections();
+    show('loading');
+    setFetchBtn(true);
 
-                const res = await fetch('/api/download', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body)
-                });
-                const data = await res.json();
+    console.log('[INFO] Fetching:', url);
 
-                stopProgress();
-                hide('download-progress');
+    const data = await safeFetch('/api/video-info', {
+        method: 'POST',
+        body: JSON.stringify({ url: url })
+    });
 
-                if (data.success) {
-                    downloadedFilename = data.filename;
-                    const details = type === 'audio'
-                        ? `🎵 ${data.filename} • ${data.bitrate} • ${data.size}`
-                        : `🎬 ${data.filename} • ${data.resolution} • ${data.size}`;
-                    document.getElementById('success-details').textContent = details;
-                    show('download-success');
-                    showToast('Download complete!', 'success');
-                } else {
-                    showError(data.error || 'Download failed');
-                }
-            } catch(err) {
-                stopProgress();
-                hide('download-progress');
-                showError('Network error: ' + err.message);
-            }
+    hide('loading');
+    setFetchBtn(false);
+
+    console.log('[INFO] Video info result:', data);
+
+    if (data && data.success) {
+        videoData = data;
+        renderVideoInfo(data);
+        show('video-info');
+        showToast('Video info loaded!', 'success');
+    } else {
+        const errorMsg = (data && data.error) ? data.error : 'Failed to fetch video info';
+        showError(errorMsg);
+        console.error('[ERROR]', errorMsg);
+    }
+}
+
+// ════════════════════════════════════════
+// Download Stream
+// ════════════════════════════════════════
+async function downloadStream(type, itag = null, quality = '1080p') {
+    if (!currentUrl) {
+        showToast('No video URL found', 'error');
+        return;
+    }
+
+    console.log(`[DOWNLOAD] type=${type}, itag=${itag}, quality=${quality}`);
+
+    hideAllSections();
+    show('download-progress');
+    resetSteps();
+
+    const statusEl = document.getElementById('download-status-text');
+    if (type === 'audio') statusEl.textContent = 'Downloading audio...';
+    else if (type === 'hd') statusEl.textContent = `Downloading ${quality} HD...`;
+    else statusEl.textContent = 'Downloading video...';
+
+    startProgress(type);
+
+    const body = { url: currentUrl, type: type };
+    if (itag !== null && itag !== undefined) body.itag = itag;
+    if (quality) body.quality = quality;
+
+    console.log('[DOWNLOAD] Request body:', body);
+
+    const data = await safeFetch('/api/download', {
+        method: 'POST',
+        body: JSON.stringify(body)
+    });
+
+    stopProgress();
+    hide('download-progress');
+
+    console.log('[DOWNLOAD] Result:', data);
+
+    if (data && data.success) {
+        downloadedFilename = data.filename;
+        const details = type === 'audio'
+            ? `🎵 ${data.filename} • ${data.bitrate || 'HQ'} • ${data.size}`
+            : `🎬 ${data.filename} • ${data.resolution || quality} • ${data.size}`;
+
+        document.getElementById('success-details').textContent = details;
+        show('download-success');
+        showToast('Download complete! 🎉', 'success');
+    } else {
+        const errorMsg = (data && data.error) ? data.error : 'Download failed';
+        showError(errorMsg);
+        console.error('[DOWNLOAD ERROR]', errorMsg);
+    }
+}
+
+// ════════════════════════════════════════
+// Render Video Info
+// ════════════════════════════════════════
+function renderVideoInfo(data) {
+    try {
+        // Set basic info
+        const thumbnail = document.getElementById('thumbnail');
+        if (thumbnail && data.thumbnail) thumbnail.src = data.thumbnail;
+
+        const title = document.getElementById('video-title');
+        if (title) title.textContent = data.title || 'Unknown';
+
+        const author = document.getElementById('video-author');
+        if (author) author.textContent = data.author || 'Unknown';
+
+        const duration = document.getElementById('video-duration');
+        if (duration) duration.textContent = data.duration || '0:00';
+
+        const views = document.getElementById('video-views');
+        if (views) views.textContent = data.views || '0';
+
+        const badge = document.getElementById('duration-badge');
+        if (badge) badge.textContent = data.duration || '0:00';
+
+        // Build stream lists
+        buildProgressiveStreams(data.progressive_streams || []);
+        buildHDStreams(data.video_only_streams || []);
+        buildAudioStreams(data.audio_streams || []);
+
+        showTab('progressive');
+
+    } catch(e) {
+        console.error('[RENDER ERROR]', e);
+    }
+}
+
+function buildProgressiveStreams(streams) {
+    const container = document.getElementById('progressive-streams');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (!streams || streams.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-sm text-center py-6">No streams available</p>';
+        return;
+    }
+
+    [...streams].reverse().forEach(s => {
+        container.innerHTML += buildStreamCard({
+            icon: 'fas fa-video',
+            iconColor: 'text-green-400',
+            iconBg: 'bg-green-500/15',
+            iconBorder: 'border-green-500/20',
+            title: s.resolution || 'Unknown',
+            subtitle: `${s.fps || 30}fps • MP4 • Audio ✅`,
+            size: s.size || '0',
+            btnClass: 'btn-primary',
+            onclick: `downloadStream('progressive', ${s.itag}, null)`
+        });
+    });
+}
+
+function buildHDStreams(streams) {
+    const container = document.getElementById('hd-streams');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (!streams || streams.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-sm text-center py-6">No HD streams available</p>';
+        return;
+    }
+
+    [...streams].reverse().forEach(s => {
+        const badge =
+            s.resolution === '2160p' ? '🔥 4K' :
+            s.resolution === '1440p' ? '🔥 2K' :
+            s.resolution === '1080p' ? '🔥 HD' : '';
+
+        container.innerHTML += buildStreamCard({
+            icon: 'fas fa-fire',
+            iconColor: 'text-red-400',
+            iconBg: 'bg-red-500/15',
+            iconBorder: 'border-red-500/20',
+            title: `${s.resolution || 'HD'} ${badge}`,
+            subtitle: `${s.fps || 30}fps • MP4 • FFmpeg`,
+            size: s.size || '0',
+            btnClass: 'btn-primary',
+            onclick: `downloadStream('hd', null, '${s.resolution}')`
+        });
+    });
+}
+
+function buildAudioStreams(streams) {
+    const container = document.getElementById('audio-streams');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (!streams || streams.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-sm text-center py-6">No audio streams available</p>';
+        return;
+    }
+
+    [...streams].reverse().forEach(s => {
+        container.innerHTML += buildStreamCard({
+            icon: 'fas fa-music',
+            iconColor: 'text-purple-400',
+            iconBg: 'bg-purple-500/15',
+            iconBorder: 'border-purple-500/20',
+            title: `${s.abr || 'Audio'} Quality`,
+            subtitle: `MP4 Audio • High Quality`,
+            size: s.size || '0',
+            btnClass: 'btn-purple',
+            onclick: `downloadStream('audio', null, null)`
+        });
+    });
+}
+
+function buildStreamCard({icon, iconColor, iconBg, iconBorder, title, subtitle, size, btnClass, onclick}) {
+    return `
+        <div class="stream-card glass-dark rounded-xl p-3 sm:p-4 border border-white/8">
+            <div class="flex flex-col xs:flex-row items-start xs:items-center gap-3">
+                <div class="w-10 h-10 ${iconBg} rounded-xl flex items-center justify-center border ${iconBorder} flex-shrink-0">
+                    <i class="${icon} ${iconColor} text-sm"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-white font-bold text-sm">${title}</p>
+                    <p class="text-gray-500 text-xs mt-0.5">${subtitle}</p>
+                </div>
+                <div class="flex items-center gap-3 w-full xs:w-auto justify-between xs:justify-end">
+                    <span class="text-gray-400 text-xs font-mono">${size} MB</span>
+                    <button onclick="${onclick}"
+                        class="${btnClass} px-4 py-2 rounded-xl text-xs font-bold text-white flex items-center gap-1.5">
+                        <i class="fas fa-download text-xs"></i>
+                        Download
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// ════════════════════════════════════════
+// Progress Animation
+// ════════════════════════════════════════
+function startProgress(type) {
+    let progress = 0;
+    const bar = document.getElementById('progress-bar');
+    const percent = document.getElementById('progress-percent');
+
+    progressInterval = setInterval(() => {
+        if (progress >= 92) return;
+        const speed = progress < 40 ? 1.0 : progress < 75 ? 0.6 : 0.3;
+        progress = Math.min(progress + speed, 92);
+        if (bar) bar.style.width = `${progress}%`;
+        if (percent) percent.textContent = `${Math.round(progress)}%`;
+
+        // Activate steps
+        if (progress > 30) activateStep('step-1', 'step-1-bar');
+        if (progress > 60 && type !== 'audio') activateStep('step-2', 'step-2-bar');
+        if (progress > 85) activateStep('step-3', 'step-3-bar');
+    }, 150);
+}
+
+function stopProgress() {
+    if (progressInterval) {
+        clearInterval(progressInterval);
+        progressInterval = null;
+    }
+    const bar = document.getElementById('progress-bar');
+    const percent = document.getElementById('progress-percent');
+    if (bar) bar.style.width = '100%';
+    if (percent) percent.textContent = '100%';
+}
+
+function activateStep(stepId, barId) {
+    const stepEl = document.getElementById(stepId);
+    if (!stepEl) return;
+    const numEl = stepEl.querySelector('div');
+    if (numEl && !numEl.classList.contains('step-done')) {
+        numEl.className = 'step-done w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all duration-500';
+        numEl.innerHTML = '<i class="fas fa-check text-xs"></i>';
+    }
+    const barEl = document.getElementById(barId);
+    if (barEl) barEl.style.width = '100%';
+}
+
+function resetSteps() {
+    [1, 2, 3].forEach(i => {
+        const el = document.getElementById(`step-${i}`);
+        if (!el) return;
+        const numEl = el.querySelector('div');
+        if (numEl) {
+            numEl.className = 'step-pending w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all duration-500';
+            numEl.textContent = i;
         }
+        const barEl = document.getElementById(`step-${i}-bar`);
+        if (barEl) barEl.style.width = '0%';
+    });
+    const bar = document.getElementById('progress-bar');
+    const percent = document.getElementById('progress-percent');
+    if (bar) bar.style.width = '0%';
+    if (percent) percent.textContent = '0%';
+}
 
-        // ── Quick Download ──
-        function quickDownload(type) {
-            if (!currentUrl) {
-                showToast('Fetch video info first', 'error');
-                return;
-            }
-            downloadStream(type, null, '1080p');
-        }
+// ════════════════════════════════════════
+// Helpers
+// ════════════════════════════════════════
+function quickDownload(type) {
+    if (!currentUrl) { showToast('Fetch video info first', 'error'); return; }
+    downloadStream(type, null, '1080p');
+}
 
-        // ── Progress Animation ──
-        function startProgress(type) {
-            let progress = 0;
-            const bar = document.getElementById('progress-bar');
-            const percent = document.getElementById('progress-percent');
-            const isAudio = type === 'audio';
-            const isProgressive = type === 'progressive';
+function saveFile() {
+    if (downloadedFilename) {
+        showToast('Saving file...', 'info');
+        window.location.href = `/api/download-file/${encodeURIComponent(downloadedFilename)}`;
+    }
+}
 
-            const milestones = isAudio
-                ? [{ step: 'step-1', bar: 'step-1-bar', at: 60 }, { step: 'step-3', bar: 'step-3-bar', at: 90 }]
-                : isProgressive
-                ? [{ step: 'step-1', bar: 'step-1-bar', at: 80 }]
-                : [
-                    { step: 'step-1', bar: 'step-1-bar', at: 35 },
-                    { step: 'step-2', bar: 'step-2-bar', at: 65 },
-                    { step: 'step-3', bar: 'step-3-bar', at: 90 }
-                  ];
+function showTab(name) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.className = btn.className.replace('tab-active', 'tab-inactive');
+    });
+    const content = document.getElementById(`content-${name}`);
+    const tab = document.getElementById(`tab-${name}`);
+    if (content) content.classList.remove('hidden');
+    if (tab) tab.className = tab.className.replace('tab-inactive', 'tab-active');
+}
 
-            let mIdx = 0;
-            progressInterval = setInterval(() => {
-                if (progress >= 95) return;
+function show(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('hidden');
+}
 
-                const speed = progress < 30 ? 1.2 : progress < 70 ? 0.8 : 0.4;
-                progress = Math.min(progress + speed, 95);
+function hide(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('hidden');
+}
 
-                bar.style.width = `${progress}%`;
-                percent.textContent = `${Math.round(progress)}%`;
+function hideAllSections() {
+    ['video-info', 'loading', 'download-progress',
+     'download-success', 'error-section'].forEach(hide);
+}
 
-                // Activate steps
-                if (mIdx < milestones.length && progress >= milestones[mIdx].at) {
-                    activateStep(milestones[mIdx].step, milestones[mIdx].bar);
-                    mIdx++;
-                }
-            }, 120);
-        }
+function showError(msg) {
+    const el = document.getElementById('error-message');
+    if (el) el.textContent = msg;
+    show('error-section');
+    showToast('Error occurred', 'error');
+}
 
-        function stopProgress() {
-            if (progressInterval) {
-                clearInterval(progressInterval);
-                progressInterval = null;
-            }
-            // Complete progress bar
-            const bar = document.getElementById('progress-bar');
-            const percent = document.getElementById('progress-percent');
-            bar.style.width = '100%';
-            percent.textContent = '100%';
-        }
+function hideError() { hide('error-section'); }
 
-        function activateStep(stepId, barId) {
-            const stepEl = document.getElementById(stepId);
-            const numEl = stepEl.querySelector('div');
-            numEl.className = 'step-done w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 flex items-center justify-center text-xs sm:text-sm font-bold flex-shrink-0 transition-all duration-500';
-            numEl.innerHTML = '<i class="fas fa-check text-xs sm:text-sm"></i>';
-            stepEl.querySelector('p').className = 'text-white text-sm sm:text-base font-medium';
-            if (barId) document.getElementById(barId).style.width = '100%';
-        }
+function clearUrl() {
+    const input = document.getElementById('youtube-url');
+    if (input) input.value = '';
+    hideAllSections();
+    videoData = null;
+    currentUrl = '';
+    downloadedFilename = '';
+}
 
-        function resetSteps() {
-            [1, 2, 3].forEach(i => {
-                const stepEl = document.getElementById(`step-${i}`);
-                const numEl = stepEl.querySelector('div');
-                numEl.className = 'step-pending w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 flex items-center justify-center text-xs sm:text-sm font-bold flex-shrink-0 transition-all duration-500';
-                numEl.textContent = i;
-                stepEl.querySelector('p').className = 'text-gray-400 text-sm sm:text-base font-medium';
-                const bar = document.getElementById(`step-${i}-bar`);
-                if (bar) bar.style.width = '0%';
-            });
-            document.getElementById('progress-bar').style.width = '0%';
-            document.getElementById('progress-percent').textContent = '0%';
-        }
+function downloadAnother() { clearUrl(); }
 
-        // ── Save File ──
-        function saveFile() {
-            if (downloadedFilename) {
-                showToast('Starting download...', 'info');
-                window.location.href = `/api/download-file/${encodeURIComponent(downloadedFilename)}`;
-            }
-        }
+function setFetchBtn(loading) {
+    const btn = document.getElementById('fetch-btn');
+    const icon = document.getElementById('fetch-icon');
+    const text = document.getElementById('fetch-text');
+    if (!btn) return;
+    btn.disabled = loading;
+    if (icon) icon.className = loading ? 'fas fa-spinner spin' : 'fas fa-search';
+    if (text) text.textContent = loading ? 'Fetching...' : 'Fetch Video';
+    btn.style.opacity = loading ? '0.7' : '1';
+}
 
-        // ── Tab Switching ──
-        function showTab(name) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.className = btn.className.replace('tab-active', 'tab-inactive');
-            });
-            document.getElementById(`content-${name}`).classList.remove('hidden');
-            const activeTab = document.getElementById(`tab-${name}`);
-            activeTab.className = activeTab.className.replace('tab-inactive', 'tab-active');
-        }
+function showToast(message, type = 'info') {
+    const toast = document.getElementById('toast');
+    const icon = document.getElementById('toast-icon');
+    const msg = document.getElementById('toast-message');
+    if (!toast || !icon || !msg) return;
 
-        // ── Toast ──
-        function showToast(message, type = 'info') {
-            const toast = document.getElementById('toast');
-            const icon = document.getElementById('toast-icon');
-            const msg = document.getElementById('toast-message');
+    const icons = {
+        success: 'fas fa-check-circle text-green-400',
+        error: 'fas fa-times-circle text-red-400',
+        info: 'fas fa-info-circle text-blue-400'
+    };
 
-            const icons = { success: 'fas fa-check-circle text-green-400', error: 'fas fa-times-circle text-red-400', info: 'fas fa-info-circle text-blue-400' };
-            icon.className = icons[type] || icons.info;
-            msg.textContent = message;
+    icon.className = icons[type] || icons.info;
+    msg.textContent = message;
+    toast.classList.remove('hidden');
+    setTimeout(() => toast.classList.add('hidden'), 3500);
+}
 
-            toast.classList.remove('hidden');
-            setTimeout(() => toast.classList.add('hidden'), 3000);
-        }
-
-        // ── Helpers ──
-        function show(id) { document.getElementById(id).classList.remove('hidden'); }
-        function hide(id) { document.getElementById(id).classList.add('hidden'); }
-
-        function hideAllSections() {
-            ['video-info', 'loading', 'download-progress', 'download-success', 'error-section']
-                .forEach(hide);
-        }
-
-        function showError(msg) {
-            document.getElementById('error-message').textContent = msg;
-            show('error-section');
-            showToast('Error occurred', 'error');
-        }
-
-        function hideError() { hide('error-section'); }
-
-        function clearUrl() {
-            document.getElementById('youtube-url').value = '';
-            hideAllSections();
-            videoData = null;
-            currentUrl = '';
-            document.getElementById('youtube-url').focus();
-        }
-
-        function downloadAnother() {
-            clearUrl();
-            downloadedFilename = '';
-        }
-
-        function setFetchBtn(loading) {
-            const btn = document.getElementById('fetch-btn');
-            const icon = document.getElementById('fetch-icon');
-            const text = document.getElementById('fetch-text');
-            btn.disabled = loading;
-            icon.className = loading ? 'fas fa-spinner spin' : 'fas fa-search';
-            text.textContent = loading ? 'Fetching...' : 'Fetch Video';
-            btn.style.opacity = loading ? '0.7' : '1';
-        }
-
-        // ── Enter key ──
-        document.getElementById('youtube-url').addEventListener('keydown', (e) => {
+// ── Event listeners ──
+document.addEventListener('DOMContentLoaded', () => {
+    const urlInput = document.getElementById('youtube-url');
+    if (urlInput) {
+        urlInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') fetchVideoInfo();
         });
-
-        // ── Paste detection ──
-        document.getElementById('youtube-url').addEventListener('paste', () => {
+        urlInput.addEventListener('paste', () => {
             setTimeout(() => {
-                const val = document.getElementById('youtube-url').value;
+                const val = urlInput.value;
                 if (val.includes('youtube.com') || val.includes('youtu.be')) {
-                    showToast('YouTube URL detected! Click Fetch Video', 'info');
+                    showToast('YouTube URL detected!', 'info');
                 }
             }, 100);
         });
+    }
+});
     </script>
 </body>
 </html>
