@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>🎬 YouTube Downloader</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        /* ── Animations ── */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(239,68,68,0.3); }
+            50% { box-shadow: 0 0 25px rgba(239,68,68,0.7); }
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+        @keyframes bounce-in {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* ── Base Styles ── */
+        * { box-sizing: border-box; }
+
+        body {
+            background: linear-gradient(-45deg, #0a0a0a, #1a0a0a, #0a0a1a, #1a0a1a);
+            background-size: 400% 400%;
+            animation: gradient 10s ease infinite;
+            min-height: 100vh;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        /* ── Glass Effect ── */
+        .glass {
+            background: rgba(255,255,255,0.04);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .glass-dark {
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+
+        /* ── Animations ── */
+        .fade-up { animation: fadeInUp 0.6s ease forwards; }
+        .fade-down { animation: fadeInDown 0.4s ease forwards; }
+        .slide-left { animation: slideInLeft 0.5s ease forwards; }
+        .spin { animation: spin 1s linear infinite; }
+        .float { animation: float 3s ease-in-out infinite; }
+        .bounce-in { animation: bounce-in 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards; }
+
+        /* ── Glow Effects ── */
+        .glow-red { animation: pulse-glow 2s ease-in-out infinite; }
+        .border-glow { box-shadow: 0 0 20px rgba(239,68,68,0.2); }
+        .border-glow-green { box-shadow: 0 0 20px rgba(34,197,94,0.2); }
+
+        /* ── Shimmer Loading ── */
+        .shimmer {
+            background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
+            background-size: 1000px 100%;
+            animation: shimmer 2s infinite;
+        }
+
+        /* ── Buttons ── */
+        .btn-primary {
+            background: linear-gradient(135deg, #ef4444, #dc2626, #b91c1c);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+            transition: left 0.5s;
+        }
+        .btn-primary:hover::before { left: 100%; }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(239,68,68,0.5);
+        }
+        .btn-primary:active { transform: translateY(0); }
+
+        .btn-purple {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            transition: all 0.3s ease;
+        }
+        .btn-purple:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(139,92,246,0.5);
+        }
+
+        .btn-green {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            transition: all 0.3s ease;
+        }
+        .btn-green:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(34,197,94,0.5);
+        }
+
+        /* ── Stream Cards ── */
+        .stream-card {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+        .stream-card:hover {
+            background: rgba(239,68,68,0.08);
+            border-color: rgba(239,68,68,0.4);
+            transform: translateX(4px);
+        }
+        .stream-card:active { transform: translateX(2px) scale(0.99); }
+
+        /* ── Feature Cards ── */
+        .feature-card {
+            transition: all 0.3s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(239,68,68,0.3);
+        }
+
+        /* ── Input ── */
+        .url-input {
+            transition: all 0.3s ease;
+        }
+        .url-input:focus {
+            border-color: #ef4444;
+            box-shadow: 0 0 0 3px rgba(239,68,68,0.1);
+            background: rgba(255,255,255,0.08);
+        }
+
+        /* ── Tabs ── */
+        .tab-active {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            box-shadow: 0 4px 15px rgba(239,68,68,0.3);
+        }
+        .tab-inactive {
+            background: rgba(255,255,255,0.06);
+            color: #9ca3af;
+        }
+        .tab-inactive:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        /* ── Progress Steps ── */
+        .step-active {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border-color: #ef4444;
+            color: white;
+        }
+        .step-done {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            border-color: #22c55e;
+            color: white;
+        }
+        .step-pending {
+            background: rgba(255,255,255,0.05);
+            border-color: rgba(255,255,255,0.2);
+            color: #6b7280;
+        }
+
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        ::-webkit-scrollbar-thumb { background: #ef4444; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #dc2626; }
+
+        /* ── Thumbnail ── */
+        .thumbnail-container {
+            position: relative;
+            overflow: hidden;
+            border-radius: 12px;
+        }
+        .thumbnail-container img {
+            transition: transform 0.3s ease;
+        }
+        .thumbnail-container:hover img { transform: scale(1.05); }
+
+        /* ── Logo pulse ── */
+        .logo-pulse {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        /* ── Responsive helpers ── */
+        .text-responsive { font-size: clamp(1.5rem, 5vw, 3.5rem); }
+        .text-responsive-sm { font-size: clamp(0.875rem, 2vw, 1.125rem); }
+
+        /* ── Mobile menu ── */
+        .mobile-only { display: none; }
+        @media (max-width: 640px) {
+            .mobile-only { display: flex; }
+            .desktop-only { display: none; }
+        }
+
+        /* ── Badge ── */
+        .badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .badge-hd { background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+        .badge-4k { background: rgba(234,179,8,0.2); color: #fbbf24; border: 1px solid rgba(234,179,8,0.3); }
+        .badge-audio { background: rgba(139,92,246,0.2); color: #a78bfa; border: 1px solid rgba(139,92,246,0.3); }
+        .badge-free { background: rgba(34,197,94,0.2); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+
+        /* ── Notification toast ── */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            animation: fadeInUp 0.4s ease;
+        }
+
+        /* ── Gradient text ── */
+        .gradient-text {
+            background: linear-gradient(135deg, #ef4444, #f97316, #ef4444);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradient 3s ease infinite;
+        }
+
+        /* ── Line clamp ── */
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* ── Responsive grid ── */
+        @media (max-width: 480px) {
+            .stream-card { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .stream-actions { width: 100%; justify-content: space-between; }
+        }
+    </style>
+</head>
+
+<body class="text-white">
+
+    <!-- ════════════════════════════════════════ -->
+    <!--                NAVBAR                   -->
+    <!-- ════════════════════════════════════════ -->
+    <nav class="glass-dark sticky top-0 z-50 border-b border-white/8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 sm:h-18">
+
+                <!-- Logo -->
+                <div class="flex items-center gap-2 sm:gap-3">
+                    <div class="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-red-500 to-red-700 rounded-xl flex items-center justify-center logo-pulse flex-shrink-0">
+                        <i class="fab fa-youtube text-white text-lg sm:text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-base sm:text-lg font-black text-white tracking-tight">YT<span class="gradient-text">Downloader</span></h1>
+                        <p class="text-xs text-gray-500 hidden sm:block leading-none">Full HD • 4K • Audio</p>
+                    </div>
+                </div>
+
+                <!-- Right side -->
+                <div class="flex items-center gap-2 sm:gap-4">
+                    <!-- FFmpeg status -->
+                    <div id="ffmpeg-status" class="flex items-center gap-1.5 text-xs sm:text-sm">
+                        <div class="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+                        <span class="text-yellow-400 hidden sm:inline">Checking...</span>
+                    </div>
+
+                    <!-- Badge -->
+                    <div class="glass px-3 py-1.5 sm:px-4 sm:py-2 rounded-full flex items-center gap-1.5">
+                        <i class="fas fa-download text-red-400 text-xs sm:text-sm"></i>
+                        <span class="text-gray-300 text-xs sm:text-sm font-medium hidden xs:inline">Free</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ════════════════════════════════════════ -->
+    <!--                HERO                     -->
+    <!-- ════════════════════════════════════════ -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
+
+        <!-- Hero Text -->
+        <div class="text-center mb-8 sm:mb-12 fade-up">
+            <!-- Floating icon -->
+            <div class="flex justify-center mb-4 sm:mb-6">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-red-500/20 to-red-700/20 rounded-2xl sm:rounded-3xl flex items-center justify-center border border-red-500/20 float">
+                    <i class="fab fa-youtube text-red-400 text-3xl sm:text-4xl"></i>
+                </div>
+            </div>
+
+            <h2 class="text-responsive font-black mb-3 sm:mb-4 leading-tight">
+                <span class="text-white">Download </span>
+                <span class="gradient-text">YouTube</span>
+                <br class="sm:hidden">
+                <span class="text-white"> Videos Free</span>
+            </h2>
+
+            <p class="text-responsive-sm text-gray-400 mb-6 sm:mb-8 max-w-xl mx-auto px-4">
+                🎬 Full HD 1080p &nbsp;•&nbsp; 🔥 4K Quality &nbsp;•&nbsp; 🎵 Audio Only
+            </p>
+
+            <!-- Stats badges -->
+            <div class="flex flex-wrap justify-center gap-2 sm:gap-3">
+                <span class="badge badge-hd">🔥 FULL HD</span>
+                <span class="badge badge-4k">⚡ 4K</span>
+                <span class="badge badge-audio">🎵 AUDIO</span>
+                <span class="badge badge-free">✅ FREE</span>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--             URL INPUT CARD              -->
+        <!-- ════════════════════════════════════════ -->
+        <div class="glass rounded-2xl sm:rounded-3xl p-5 sm:p-8 mb-6 sm:mb-8 border-glow fade-up">
+            <label class="block text-gray-300 text-sm font-semibold mb-3">
+                <i class="fas fa-link mr-2 text-red-400"></i>
+                Paste YouTube URL here
+            </label>
+
+            <!-- Input row -->
+            <div class="flex flex-col sm:flex-row gap-3">
+                <div class="flex-1 relative">
+                    <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
+                        <i class="fab fa-youtube text-red-400/60"></i>
+                    </div>
+                    <input
+                        id="youtube-url"
+                        type="url"
+                        placeholder="https://www.youtube.com/watch?v=..."
+                        class="url-input w-full bg-white/6 border border-white/12 rounded-xl sm:rounded-2xl pl-11 pr-11 py-3.5 sm:py-4 text-white placeholder-gray-600 focus:outline-none text-sm sm:text-base"
+                    >
+                    <button
+                        onclick="clearUrl()"
+                        class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 hover:text-red-400 transition-colors w-5 h-5 flex items-center justify-center"
+                    >
+                        <i class="fas fa-times text-xs"></i>
+                    </button>
+                </div>
+
+                <!-- Fetch Button -->
+                <button
+                    onclick="fetchVideoInfo()"
+                    id="fetch-btn"
+                    class="btn-primary px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-white flex items-center justify-center gap-2 whitespace-nowrap text-sm sm:text-base w-full sm:w-auto"
+                >
+                    <i class="fas fa-search" id="fetch-icon"></i>
+                    <span id="fetch-text">Fetch Video</span>
+                </button>
+            </div>
+
+            <!-- Hint -->
+            <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3">
+                <p class="text-gray-600 text-xs">
+                    <i class="fas fa-lightbulb mr-1 text-yellow-500/60"></i>
+                    Supports YouTube videos, music & shorts
+                </p>
+                <p class="text-gray-600 text-xs">
+                    <i class="fas fa-keyboard mr-1 text-gray-600"></i>
+                    Press Enter to fetch
+                </p>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--               LOADING                   -->
+        <!-- ════════════════════════════════════════ -->
+        <div id="loading" class="hidden glass rounded-2xl sm:rounded-3xl p-8 sm:p-12 mb-6 text-center fade-up">
+            <div class="flex flex-col items-center gap-4">
+                <div class="relative w-16 h-16 sm:w-20 sm:h-20">
+                    <div class="w-full h-full border-4 border-red-500/20 rounded-full"></div>
+                    <div class="absolute inset-0 border-4 border-transparent border-t-red-500 rounded-full spin"></div>
+                    <div class="absolute inset-3 border-4 border-transparent border-t-red-400/50 rounded-full spin" style="animation-direction: reverse; animation-duration: 0.7s;"></div>
+                </div>
+                <div>
+                    <p class="text-white font-bold text-lg sm:text-xl">Fetching video info...</p>
+                    <p class="text-gray-500 text-sm mt-1">Connecting to YouTube servers</p>
+                </div>
+                <!-- Shimmer bars -->
+                <div class="w-full max-w-sm space-y-2 mt-2">
+                    <div class="h-3 shimmer rounded-full w-3/4 mx-auto"></div>
+                    <div class="h-3 shimmer rounded-full w-1/2 mx-auto"></div>
+                    <div class="h-3 shimmer rounded-full w-2/3 mx-auto"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--             VIDEO INFO CARD             -->
+        <!-- ════════════════════════════════════════ -->
+        <div id="video-info" class="hidden mb-6 sm:mb-8 fade-up">
+            <div class="glass rounded-2xl sm:rounded-3xl overflow-hidden border border-white/8">
+
+                <!-- ── Video Header ── -->
+                <div class="p-5 sm:p-8">
+                    <div class="flex flex-col sm:flex-row gap-5 sm:gap-6">
+
+                        <!-- Thumbnail -->
+                        <div class="thumbnail-container w-full sm:w-56 md:w-64 lg:w-72 flex-shrink-0">
+                            <img
+                                id="thumbnail"
+                                src=""
+                                alt="Thumbnail"
+                                class="w-full h-44 sm:h-36 md:h-40 lg:h-44 object-cover"
+                            >
+                            <!-- Play overlay -->
+                            <div class="absolute inset-0 flex items-center justify-center bg-black/20">
+                                <div class="w-12 h-12 sm:w-14 sm:h-14 bg-red-600/90 rounded-full flex items-center justify-center backdrop-blur-sm border border-red-500/50">
+                                    <i class="fas fa-play text-white text-base sm:text-lg ml-1"></i>
+                                </div>
+                            </div>
+                            <!-- Duration badge -->
+                            <div class="absolute bottom-2 right-2 bg-black/80 px-2 py-0.5 rounded text-xs font-mono text-white" id="duration-badge"></div>
+                        </div>
+
+                        <!-- Info -->
+                        <div class="flex-1 min-w-0">
+                            <h3 id="video-title" class="text-base sm:text-lg lg:text-xl font-bold text-white mb-3 line-clamp-2 leading-snug"></h3>
+
+                            <!-- Stats grid -->
+                            <div class="grid grid-cols-3 gap-2 sm:gap-3 mb-4">
+                                <div class="glass-dark rounded-xl p-2.5 sm:p-3 text-center">
+                                    <p class="text-gray-500 text-xs mb-0.5">
+                                        <i class="fas fa-user mr-1 hidden sm:inline"></i>Channel
+                                    </p>
+                                    <p id="video-author" class="text-white text-xs sm:text-sm font-bold truncate"></p>
+                                </div>
+                                <div class="glass-dark rounded-xl p-2.5 sm:p-3 text-center">
+                                    <p class="text-gray-500 text-xs mb-0.5">
+                                        <i class="fas fa-clock mr-1 hidden sm:inline"></i>Duration
+                                    </p>
+                                    <p id="video-duration" class="text-white text-xs sm:text-sm font-bold"></p>
+                                </div>
+                                <div class="glass-dark rounded-xl p-2.5 sm:p-3 text-center">
+                                    <p class="text-gray-500 text-xs mb-0.5">
+                                        <i class="fas fa-eye mr-1 hidden sm:inline"></i>Views
+                                    </p>
+                                    <p id="video-views" class="text-white text-xs sm:text-sm font-bold"></p>
+                                </div>
+                            </div>
+
+                            <!-- Quick action buttons -->
+                            <div class="flex flex-col xs:flex-row gap-2 sm:gap-3">
+                                <button
+                                    onclick="quickDownload('hd')"
+                                    class="btn-primary flex-1 xs:flex-none px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
+                                >
+                                    <i class="fas fa-fire text-xs sm:text-sm"></i>
+                                    <span>Full HD Download</span>
+                                </button>
+                                <button
+                                    onclick="quickDownload('audio')"
+                                    class="btn-purple flex-1 xs:flex-none px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
+                                >
+                                    <i class="fas fa-music text-xs sm:text-sm"></i>
+                                    <span>Audio Only</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── Quality Selector ── -->
+                <div class="border-t border-white/8 p-5 sm:p-8">
+                    <h4 class="text-base sm:text-lg font-bold text-white mb-4 sm:mb-6 flex items-center gap-2">
+                        <i class="fas fa-sliders text-red-400"></i>
+                        Choose Quality
+                    </h4>
+
+                    <!-- Tabs -->
+                    <div class="flex gap-1.5 sm:gap-2 mb-5 sm:mb-6 overflow-x-auto pb-1 scrollbar-hide">
+                        <button onclick="showTab('progressive')" id="tab-progressive"
+                            class="tab-btn tab-active px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap flex-shrink-0 flex items-center gap-1.5 sm:gap-2 transition-all">
+                            <i class="fas fa-video text-xs sm:text-sm"></i>
+                            <span>Video + Audio</span>
+                        </button>
+                        <button onclick="showTab('hd')" id="tab-hd"
+                            class="tab-btn tab-inactive px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap flex-shrink-0 flex items-center gap-1.5 sm:gap-2 transition-all">
+                            <i class="fas fa-fire text-xs sm:text-sm"></i>
+                            <span>HD / 4K</span>
+                        </button>
+                        <button onclick="showTab('audio')" id="tab-audio"
+                            class="tab-btn tab-inactive px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap flex-shrink-0 flex items-center gap-1.5 sm:gap-2 transition-all">
+                            <i class="fas fa-music text-xs sm:text-sm"></i>
+                            <span>Audio</span>
+                        </button>
+                    </div>
+
+                    <!-- Tab: Progressive -->
+                    <div id="content-progressive" class="tab-content">
+                        <div class="flex items-start gap-2 p-3 sm:p-4 glass-dark rounded-xl mb-4 border border-blue-500/20">
+                            <i class="fas fa-info-circle text-blue-400 mt-0.5 flex-shrink-0 text-sm"></i>
+                            <p class="text-gray-400 text-xs sm:text-sm">
+                                Direct download with video + audio combined. Best for 360p–720p. No processing needed.
+                            </p>
+                        </div>
+                        <div id="progressive-streams" class="space-y-2 sm:space-y-3"></div>
+                    </div>
+
+                    <!-- Tab: HD -->
+                    <div id="content-hd" class="tab-content hidden">
+                        <div class="flex items-start gap-2 p-3 sm:p-4 glass-dark rounded-xl mb-4 border border-orange-500/20">
+                            <i class="fas fa-info-circle text-orange-400 mt-0.5 flex-shrink-0 text-sm"></i>
+                            <p class="text-gray-400 text-xs sm:text-sm">
+                                High quality video merged with best audio using FFmpeg. Supports 1080p Full HD and 4K.
+                            </p>
+                        </div>
+                        <div id="hd-streams" class="space-y-2 sm:space-y-3"></div>
+                    </div>
+
+                    <!-- Tab: Audio -->
+                    <div id="content-audio" class="tab-content hidden">
+                        <div class="flex items-start gap-2 p-3 sm:p-4 glass-dark rounded-xl mb-4 border border-purple-500/20">
+                            <i class="fas fa-info-circle text-purple-400 mt-0.5 flex-shrink-0 text-sm"></i>
+                            <p class="text-gray-400 text-xs sm:text-sm">
+                                Download audio only. Perfect for music, podcasts, and songs.
+                            </p>
+                        </div>
+                        <div id="audio-streams" class="space-y-2 sm:space-y-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--           DOWNLOAD PROGRESS             -->
+        <!-- ════════════════════════════════════════ -->
+        <div id="download-progress" class="hidden glass rounded-2xl sm:rounded-3xl p-6 sm:p-8 mb-6 fade-up">
+
+            <!-- Header -->
+            <div class="flex items-center gap-4 mb-6 sm:mb-8">
+                <div class="relative w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0">
+                    <div class="w-full h-full border-4 border-red-500/20 rounded-full"></div>
+                    <div class="absolute inset-0 border-4 border-transparent border-t-red-500 rounded-full spin"></div>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold text-lg sm:text-xl">Downloading...</h4>
+                    <p class="text-gray-400 text-xs sm:text-sm" id="download-status-text">Initializing download</p>
+                </div>
+            </div>
+
+            <!-- Steps -->
+            <div class="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
+                <!-- Step 1 -->
+                <div class="flex items-center gap-3 sm:gap-4" id="step-1">
+                    <div class="step-pending w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 flex items-center justify-center text-xs sm:text-sm font-bold flex-shrink-0 transition-all duration-500">
+                        1
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-gray-400 text-sm sm:text-base font-medium">Downloading Video Stream</p>
+                        <div class="h-1 bg-white/5 rounded-full mt-1.5 overflow-hidden">
+                            <div id="step-1-bar" class="h-full bg-red-500 rounded-full transition-all duration-1000 w-0"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="flex items-center gap-3 sm:gap-4" id="step-2">
+                    <div class="step-pending w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 flex items-center justify-center text-xs sm:text-sm font-bold flex-shrink-0 transition-all duration-500">
+                        2
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-gray-400 text-sm sm:text-base font-medium">Downloading Audio Stream</p>
+                        <div class="h-1 bg-white/5 rounded-full mt-1.5 overflow-hidden">
+                            <div id="step-2-bar" class="h-full bg-red-500 rounded-full transition-all duration-1000 w-0"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="flex items-center gap-3 sm:gap-4" id="step-3">
+                    <div class="step-pending w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 flex items-center justify-center text-xs sm:text-sm font-bold flex-shrink-0 transition-all duration-500">
+                        3
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-gray-400 text-sm sm:text-base font-medium">Merging with FFmpeg</p>
+                        <div class="h-1 bg-white/5 rounded-full mt-1.5 overflow-hidden">
+                            <div id="step-3-bar" class="h-full bg-red-500 rounded-full transition-all duration-1000 w-0"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Overall Progress -->
+            <div class="glass-dark rounded-xl p-3 sm:p-4">
+                <div class="flex justify-between text-xs sm:text-sm text-gray-400 mb-2">
+                    <span>Overall Progress</span>
+                    <span id="progress-percent" class="font-mono text-red-400 font-bold">0%</span>
+                </div>
+                <div class="bg-white/5 rounded-full h-2.5 sm:h-3 overflow-hidden">
+                    <div id="progress-bar" class="h-full bg-gradient-to-r from-red-600 to-red-400 rounded-full transition-all duration-300 w-0"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--              SUCCESS CARD               -->
+        <!-- ════════════════════════════════════════ -->
+        <div id="download-success" class="hidden glass rounded-2xl sm:rounded-3xl p-6 sm:p-10 mb-6 border border-green-500/20 border-glow-green fade-up">
+            <div class="text-center">
+                <!-- Success icon -->
+                <div class="w-20 h-20 sm:w-24 sm:h-24 bg-green-500/15 rounded-full flex items-center justify-center mx-auto mb-5 sm:mb-6 bounce-in border border-green-500/30">
+                    <i class="fas fa-check-circle text-green-400 text-4xl sm:text-5xl"></i>
+                </div>
+
+                <h4 class="text-xl sm:text-2xl lg:text-3xl font-black text-white mb-2">
+                    Download Complete! 🎉
+                </h4>
+                <p class="text-gray-400 text-sm sm:text-base mb-2" id="success-details"></p>
+                <p class="text-gray-600 text-xs sm:text-sm mb-6 sm:mb-8" id="success-path"></p>
+
+                <!-- Action buttons -->
+                <div class="flex flex-col xs:flex-row flex-wrap gap-3 justify-center">
+                    <button
+                        id="save-file-btn"
+                        onclick="saveFile()"
+                        class="btn-green px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl font-bold text-white flex items-center justify-center gap-2 text-sm sm:text-base w-full xs:w-auto"
+                    >
+                        <i class="fas fa-download"></i>
+                        <span>Save to Device</span>
+                    </button>
+                    <button
+                        onclick="downloadAnother()"
+                        class="glass hover:bg-white/10 px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl font-bold text-white flex items-center justify-center gap-2 text-sm sm:text-base w-full xs:w-auto transition-all border border-white/10 hover:border-white/20"
+                    >
+                        <i class="fas fa-plus"></i>
+                        <span>Download Another</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--               ERROR CARD                -->
+        <!-- ════════════════════════════════════════ -->
+        <div id="error-section" class="hidden glass rounded-2xl p-4 sm:p-6 mb-6 border border-red-500/20 fade-up">
+            <div class="flex items-start gap-3 sm:gap-4">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-red-500/15 rounded-xl flex items-center justify-center flex-shrink-0 border border-red-500/20">
+                    <i class="fas fa-exclamation-triangle text-red-400 text-sm sm:text-lg"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h4 class="text-white font-bold text-sm sm:text-base mb-1">Download Failed</h4>
+                    <p id="error-message" class="text-red-400 text-xs sm:text-sm break-words"></p>
+                </div>
+                <button onclick="hideError()"
+                    class="text-gray-600 hover:text-white flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all">
+                    <i class="fas fa-times text-sm"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!--             FEATURES GRID               -->
+        <!-- ════════════════════════════════════════ -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-8 sm:mt-12">
+
+            <div class="feature-card glass rounded-2xl p-5 sm:p-6 border border-white/8 fade-up">
+                <div class="w-11 h-11 sm:w-12 sm:h-12 bg-red-500/15 rounded-xl flex items-center justify-center mb-4 border border-red-500/20">
+                    <i class="fas fa-fire text-red-400 text-lg sm:text-xl"></i>
+                </div>
+                <h3 class="text-white font-bold text-base sm:text-lg mb-2">Full HD & 4K</h3>
+                <p class="text-gray-500 text-xs sm:text-sm leading-relaxed">
+                    Download videos in stunning 1080p Full HD or 4K quality with crystal clear audio merged using FFmpeg.
+                </p>
+                <div class="flex gap-2 mt-4">
+                    <span class="badge badge-hd">1080p</span>
+                    <span class="badge badge-4k">4K</span>
+                </div>
+            </div>
+
+            <div class="feature-card glass rounded-2xl p-5 sm:p-6 border border-white/8 fade-up" style="animation-delay: 0.1s">
+                <div class="w-11 h-11 sm:w-12 sm:h-12 bg-purple-500/15 rounded-xl flex items-center justify-center mb-4 border border-purple-500/20">
+                    <i class="fas fa-music text-purple-400 text-lg sm:text-xl"></i>
+                </div>
+                <h3 class="text-white font-bold text-base sm:text-lg mb-2">Audio Only</h3>
+                <p class="text-gray-500 text-xs sm:text-sm leading-relaxed">
+                    Extract high quality audio from any YouTube video. Perfect for music, podcasts, and offline listening.
+                </p>
+                <div class="flex gap-2 mt-4">
+                    <span class="badge badge-audio">MP4 Audio</span>
+                    <span class="badge badge-free">HQ</span>
+                </div>
+            </div>
+
+            <div class="feature-card glass rounded-2xl p-5 sm:p-6 border border-white/8 fade-up sm:col-span-2 lg:col-span-1" style="animation-delay: 0.2s">
+                <div class="w-11 h-11 sm:w-12 sm:h-12 bg-blue-500/15 rounded-xl flex items-center justify-center mb-4 border border-blue-500/20">
+                    <i class="fas fa-bolt text-blue-400 text-lg sm:text-xl"></i>
+                </div>
+                <h3 class="text-white font-bold text-base sm:text-lg mb-2">Fast & Free</h3>
+                <p class="text-gray-500 text-xs sm:text-sm leading-relaxed">
+                    Lightning fast downloads with no limits, no signup required. Built with Python, Flask & FFmpeg.
+                </p>
+                <div class="flex gap-2 mt-4">
+                    <span class="badge badge-free">FREE</span>
+                    <span class="badge badge-hd">FAST</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════ -->
+    <!--                FOOTER                   -->
+    <!-- ════════════════════════════════════════ -->
+    <footer class="glass-dark border-t border-white/6 mt-12 sm:mt-16 py-8 sm:py-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-gradient-to-br from-red-500 to-red-700 rounded-lg flex items-center justify-center">
+                        <i class="fab fa-youtube text-white text-sm"></i>
+                    </div>
+                    <span class="text-white font-bold text-sm sm:text-base">YTDownloader</span>
+                </div>
+                <p class="text-gray-600 text-xs sm:text-sm text-center">
+                    Built with <span class="text-red-500">♥</span> using Python Flask + pytubefix + FFmpeg
+                </p>
+                <div class="flex items-center gap-3 text-gray-600 text-xs">
+                    <span class="flex items-center gap-1"><i class="fab fa-python text-blue-400"></i> Python</span>
+                    <span class="text-gray-700">•</span>
+                    <span class="flex items-center gap-1"><i class="fas fa-flask text-green-400"></i> Flask</span>
+                    <span class="text-gray-700">•</span>
+                    <span class="flex items-center gap-1"><i class="fas fa-film text-orange-400"></i> FFmpeg</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ════════════════════════════════════════ -->
+    <!--             TOAST NOTIFICATION          -->
+    <!-- ════════════════════════════════════════ -->
+    <div id="toast" class="toast hidden">
+        <div class="glass-dark border border-white/10 rounded-xl px-4 py-3 flex items-center gap-3 min-w-48 max-w-xs shadow-2xl">
+            <i id="toast-icon" class="fas fa-info-circle text-blue-400"></i>
+            <p id="toast-message" class="text-white text-sm font-medium"></p>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════ -->
+    <!--              JAVASCRIPT                 -->
+    <!-- ════════════════════════════════════════ -->
+    <script>
+        // ── State ──
+        let videoData = null;
+        let currentUrl = '';
+        let downloadedFilename = '';
+        let progressInterval = null;
+
+        // ── Init ──
+        window.addEventListener('load', () => {
+            checkFFmpeg();
+            // Auto-focus input on desktop
+            if (window.innerWidth > 768) {
+                document.getElementById('youtube-url').focus();
+            }
+        });
+
+        // ── Check FFmpeg ──
+        async function checkFFmpeg() {
+            try {
+                const res = await fetch('/api/check-ffmpeg');
+                const data = await res.json();
+                const el = document.getElementById('ffmpeg-status');
+                if (data.ffmpeg) {
+                    el.innerHTML = `
+                        <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+                        <span class="text-green-400 text-xs sm:text-sm font-medium hidden sm:inline">FFmpeg Ready</span>
+                        <i class="fas fa-check text-green-400 text-xs sm:hidden"></i>
+                    `;
+                } else {
+                    el.innerHTML = `
+                        <div class="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
+                        <span class="text-red-400 text-xs sm:text-sm hidden sm:inline">FFmpeg Missing</span>
+                        <i class="fas fa-times text-red-400 text-xs sm:hidden"></i>
+                    `;
+                }
+            } catch(e) {}
+        }
+
+        // ── Fetch Video Info ──
+        async function fetchVideoInfo() {
+            const url = document.getElementById('youtube-url').value.trim();
+
+            if (!url) {
+                showToast('Please enter a YouTube URL', 'error');
+                document.getElementById('youtube-url').focus();
+                return;
+            }
+            if (!url.includes('youtube.com') && !url.includes('youtu.be')) {
+                showToast('Please enter a valid YouTube URL', 'error');
+                return;
+            }
+
+            currentUrl = url;
+
+            // UI: loading state
+            hideAllSections();
+            show('loading');
+            setFetchBtn(true);
+
+            try {
+                const res = await fetch('/api/video-info', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                });
+                const data = await res.json();
+
+                hide('loading');
+                setFetchBtn(false);
+
+                if (data.success) {
+                    videoData = data;
+                    renderVideoInfo(data);
+                    show('video-info');
+                    showToast('Video info loaded!', 'success');
+                } else {
+                    showError(data.error || 'Failed to fetch video info');
+                }
+            } catch(err) {
+                hide('loading');
+                setFetchBtn(false);
+                showError('Network error: ' + err.message);
+            }
+        }
+
+        // ── Render Video Info ──
+        function renderVideoInfo(data) {
+            document.getElementById('thumbnail').src = data.thumbnail;
+            document.getElementById('video-title').textContent = data.title;
+            document.getElementById('video-author').textContent = data.author;
+            document.getElementById('video-duration').textContent = data.duration;
+            document.getElementById('video-views').textContent = data.views;
+            document.getElementById('duration-badge').textContent = data.duration;
+
+            // Progressive streams
+            const progContainer = document.getElementById('progressive-streams');
+            progContainer.innerHTML = '';
+            if (data.progressive_streams.length === 0) {
+                progContainer.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">No progressive streams available</p>';
+            } else {
+                data.progressive_streams.reverse().forEach(s => {
+                    progContainer.innerHTML += buildStreamCard({
+                        icon: 'fas fa-video',
+                        iconColor: 'text-green-400',
+                        iconBg: 'bg-green-500/15',
+                        iconBorder: 'border-green-500/20',
+                        title: s.resolution,
+                        subtitle: `${s.fps}fps • MP4 • Audio ✅`,
+                        size: s.size,
+                        badge: '',
+                        btnClass: 'btn-primary',
+                        onclick: `downloadStream('progressive', ${s.itag}, null)`
+                    });
+                });
+            }
+
+            // HD streams
+            const hdContainer = document.getElementById('hd-streams');
+            hdContainer.innerHTML = '';
+            if (data.video_only_streams.length === 0) {
+                hdContainer.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">No HD streams available</p>';
+            } else {
+                data.video_only_streams.reverse().forEach(s => {
+                    const badge = s.resolution === '2160p' ? '🔥 4K' :
+                                  s.resolution === '1440p' ? '🔥 2K' :
+                                  s.resolution === '1080p' ? '🔥 HD' : '';
+                    hdContainer.innerHTML += buildStreamCard({
+                        icon: 'fas fa-fire',
+                        iconColor: 'text-red-400',
+                        iconBg: 'bg-red-500/15',
+                        iconBorder: 'border-red-500/20',
+                        title: `${s.resolution} ${badge}`,
+                        subtitle: `${s.fps}fps • MP4 • FFmpeg Merge`,
+                        size: s.size,
+                        badge: 'FFmpeg',
+                        btnClass: 'btn-primary',
+                        onclick: `downloadStream('hd', null, '${s.resolution}')`
+                    });
+                });
+            }
+
+            // Audio streams
+            const audioContainer = document.getElementById('audio-streams');
+            audioContainer.innerHTML = '';
+            if (data.audio_streams.length === 0) {
+                audioContainer.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">No audio streams available</p>';
+            } else {
+                data.audio_streams.reverse().forEach(s => {
+                    audioContainer.innerHTML += buildStreamCard({
+                        icon: 'fas fa-music',
+                        iconColor: 'text-purple-400',
+                        iconBg: 'bg-purple-500/15',
+                        iconBorder: 'border-purple-500/20',
+                        title: `${s.abr} Audio`,
+                        subtitle: `MP4 Audio • High Quality`,
+                        size: s.size,
+                        badge: '',
+                        btnClass: 'btn-purple',
+                        onclick: `downloadStream('audio', null, null)`
+                    });
+                });
+            }
+
+            showTab('progressive');
+        }
+
+        // ── Build Stream Card HTML ──
+        function buildStreamCard({ icon, iconColor, iconBg, iconBorder, title, subtitle, size, btnClass, onclick }) {
+            return `
+                <div class="stream-card glass-dark rounded-xl p-3 sm:p-4 border border-white/8">
+                    <div class="flex flex-col xs:flex-row items-start xs:items-center gap-3 xs:gap-4">
+                        <!-- Icon -->
+                        <div class="w-10 h-10 sm:w-11 sm:h-11 ${iconBg} rounded-xl flex items-center justify-center border ${iconBorder} flex-shrink-0">
+                            <i class="${icon} ${iconColor} text-sm sm:text-base"></i>
+                        </div>
+
+                        <!-- Info -->
+                        <div class="flex-1 min-w-0">
+                            <p class="text-white font-bold text-sm sm:text-base">${title}</p>
+                            <p class="text-gray-500 text-xs mt-0.5">${subtitle}</p>
+                        </div>
+
+                        <!-- Size + Button -->
+                        <div class="stream-actions flex items-center gap-2 sm:gap-3 w-full xs:w-auto justify-between xs:justify-end">
+                            <span class="text-gray-400 text-xs sm:text-sm font-mono">${size} MB</span>
+                            <button
+                                onclick="${onclick}"
+                                class="${btnClass} px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold text-white flex items-center gap-1.5 whitespace-nowrap"
+                            >
+                                <i class="fas fa-download text-xs"></i>
+                                <span>Download</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ── Download Stream ──
+        async function downloadStream(type, itag = null, quality = '1080p') {
+            if (!currentUrl) {
+                showToast('No video URL found', 'error');
+                return;
+            }
+
+            hideAllSections();
+            show('download-progress');
+            resetSteps();
+
+            const statusText = document.getElementById('download-status-text');
+            if (type === 'audio') statusText.textContent = 'Downloading audio stream...';
+            else if (type === 'hd') statusText.textContent = `Downloading ${quality} with FFmpeg merge...`;
+            else statusText.textContent = 'Downloading video with audio...';
+
+            // Start progress animation
+            startProgress(type);
+
+            try {
+                const body = { url: currentUrl, type };
+                if (itag) body.itag = itag;
+                if (quality) body.quality = quality;
+
+                const res = await fetch('/api/download', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+
+                stopProgress();
+                hide('download-progress');
+
+                if (data.success) {
+                    downloadedFilename = data.filename;
+                    const details = type === 'audio'
+                        ? `🎵 ${data.filename} • ${data.bitrate} • ${data.size}`
+                        : `🎬 ${data.filename} • ${data.resolution} • ${data.size}`;
+                    document.getElementById('success-details').textContent = details;
+                    show('download-success');
+                    showToast('Download complete!', 'success');
+                } else {
+                    showError(data.error || 'Download failed');
+                }
+            } catch(err) {
+                stopProgress();
+                hide('download-progress');
+                showError('Network error: ' + err.message);
+            }
+        }
+
+        // ── Quick Download ──
+        function quickDownload(type) {
+            if (!currentUrl) {
+                showToast('Fetch video info first', 'error');
+                return;
+            }
+            downloadStream(type, null, '1080p');
+        }
+
+        // ── Progress Animation ──
+        function startProgress(type) {
+            let progress = 0;
+            const bar = document.getElementById('progress-bar');
+            const percent = document.getElementById('progress-percent');
+            const isAudio = type === 'audio';
+            const isProgressive = type === 'progressive';
+
+            const milestones = isAudio
+                ? [{ step: 'step-1', bar: 'step-1-bar', at: 60 }, { step: 'step-3', bar: 'step-3-bar', at: 90 }]
+                : isProgressive
+                ? [{ step: 'step-1', bar: 'step-1-bar', at: 80 }]
+                : [
+                    { step: 'step-1', bar: 'step-1-bar', at: 35 },
+                    { step: 'step-2', bar: 'step-2-bar', at: 65 },
+                    { step: 'step-3', bar: 'step-3-bar', at: 90 }
+                  ];
+
+            let mIdx = 0;
+            progressInterval = setInterval(() => {
+                if (progress >= 95) return;
+
+                const speed = progress < 30 ? 1.2 : progress < 70 ? 0.8 : 0.4;
+                progress = Math.min(progress + speed, 95);
+
+                bar.style.width = `${progress}%`;
+                percent.textContent = `${Math.round(progress)}%`;
+
+                // Activate steps
+                if (mIdx < milestones.length && progress >= milestones[mIdx].at) {
+                    activateStep(milestones[mIdx].step, milestones[mIdx].bar);
+                    mIdx++;
+                }
+            }, 120);
+        }
+
+        function stopProgress() {
+            if (progressInterval) {
+                clearInterval(progressInterval);
+                progressInterval = null;
+            }
+            // Complete progress bar
+            const bar = document.getElementById('progress-bar');
+            const percent = document.getElementById('progress-percent');
+            bar.style.width = '100%';
+            percent.textContent = '100%';
+        }
+
+        function activateStep(stepId, barId) {
+            const stepEl = document.getElementById(stepId);
+            const numEl = stepEl.querySelector('div');
+            numEl.className = 'step-done w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 flex items-center justify-center text-xs sm:text-sm font-bold flex-shrink-0 transition-all duration-500';
+            numEl.innerHTML = '<i class="fas fa-check text-xs sm:text-sm"></i>';
+            stepEl.querySelector('p').className = 'text-white text-sm sm:text-base font-medium';
+            if (barId) document.getElementById(barId).style.width = '100%';
+        }
+
+        function resetSteps() {
+            [1, 2, 3].forEach(i => {
+                const stepEl = document.getElementById(`step-${i}`);
+                const numEl = stepEl.querySelector('div');
+                numEl.className = 'step-pending w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 flex items-center justify-center text-xs sm:text-sm font-bold flex-shrink-0 transition-all duration-500';
+                numEl.textContent = i;
+                stepEl.querySelector('p').className = 'text-gray-400 text-sm sm:text-base font-medium';
+                const bar = document.getElementById(`step-${i}-bar`);
+                if (bar) bar.style.width = '0%';
+            });
+            document.getElementById('progress-bar').style.width = '0%';
+            document.getElementById('progress-percent').textContent = '0%';
+        }
+
+        // ── Save File ──
+        function saveFile() {
+            if (downloadedFilename) {
+                showToast('Starting download...', 'info');
+                window.location.href = `/api/download-file/${encodeURIComponent(downloadedFilename)}`;
+            }
+        }
+
+        // ── Tab Switching ──
+        function showTab(name) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = btn.className.replace('tab-active', 'tab-inactive');
+            });
+            document.getElementById(`content-${name}`).classList.remove('hidden');
+            const activeTab = document.getElementById(`tab-${name}`);
+            activeTab.className = activeTab.className.replace('tab-inactive', 'tab-active');
+        }
+
+        // ── Toast ──
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            const msg = document.getElementById('toast-message');
+
+            const icons = { success: 'fas fa-check-circle text-green-400', error: 'fas fa-times-circle text-red-400', info: 'fas fa-info-circle text-blue-400' };
+            icon.className = icons[type] || icons.info;
+            msg.textContent = message;
+
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+
+        // ── Helpers ──
+        function show(id) { document.getElementById(id).classList.remove('hidden'); }
+        function hide(id) { document.getElementById(id).classList.add('hidden'); }
+
+        function hideAllSections() {
+            ['video-info', 'loading', 'download-progress', 'download-success', 'error-section']
+                .forEach(hide);
+        }
+
+        function showError(msg) {
+            document.getElementById('error-message').textContent = msg;
+            show('error-section');
+            showToast('Error occurred', 'error');
+        }
+
+        function hideError() { hide('error-section'); }
+
+        function clearUrl() {
+            document.getElementById('youtube-url').value = '';
+            hideAllSections();
+            videoData = null;
+            currentUrl = '';
+            document.getElementById('youtube-url').focus();
+        }
+
+        function downloadAnother() {
+            clearUrl();
+            downloadedFilename = '';
+        }
+
+        function setFetchBtn(loading) {
+            const btn = document.getElementById('fetch-btn');
+            const icon = document.getElementById('fetch-icon');
+            const text = document.getElementById('fetch-text');
+            btn.disabled = loading;
+            icon.className = loading ? 'fas fa-spinner spin' : 'fas fa-search';
+            text.textContent = loading ? 'Fetching...' : 'Fetch Video';
+            btn.style.opacity = loading ? '0.7' : '1';
+        }
+
+        // ── Enter key ──
+        document.getElementById('youtube-url').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') fetchVideoInfo();
+        });
+
+        // ── Paste detection ──
+        document.getElementById('youtube-url').addEventListener('paste', () => {
+            setTimeout(() => {
+                const val = document.getElementById('youtube-url').value;
+                if (val.includes('youtube.com') || val.includes('youtu.be')) {
+                    showToast('YouTube URL detected! Click Fetch Video', 'info');
+                }
+            }, 100);
+        });
+    </script>
+</body>
+</html>
