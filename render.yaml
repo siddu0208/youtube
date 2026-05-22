@@ -1,6 +1,14 @@
 services:
   - type: web
-    name: yt-downloader
+    name: youtube-downloader
     runtime: python
-    buildCommand: apt-get update && apt-get install -y ffmpeg && pip install -r requirements.txt
+    plan: free
+    region: oregon
+    buildCommand: |
+      apt-get update
+      apt-get install -y ffmpeg
+      pip install -r requirements.txt
     startCommand: gunicorn app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
