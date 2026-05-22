@@ -2,97 +2,123 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>YouTube Downloader</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{
-  background:linear-gradient(-45deg,#0a0a0a,#1a0505,#0a0a1a,#150010);
-  background-size:400% 400%;
-  animation:bg 12s ease infinite;
-  min-height:100vh;
-  font-family:'Segoe UI',system-ui,sans-serif;
-  color:white;
-}
-@keyframes bg{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-@keyframes glow{0%,100%{box-shadow:0 0 5px rgba(239,68,68,.3)}50%{box-shadow:0 0 25px rgba(239,68,68,.7)}}
-@keyframes bounceIn{0%{transform:scale(.3);opacity:0}50%{transform:scale(1.05)}70%{transform:scale(.9)}100%{transform:scale(1);opacity:1}}
-@keyframes shimmer{0%{background-position:-800px 0}100%{background-position:800px 0}}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:linear-gradient(-45deg,#0a0a0a,#1a0505,#0a0a1a,#150010);
+    background-size:400% 400%;
+    animation:bg 12s ease infinite;
+    min-height:100vh;
+    font-family:'Segoe UI',system-ui,sans-serif;
+    color:white;
+  }
+  @keyframes bg{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+  @keyframes glow{0%,100%{box-shadow:0 0 5px rgba(239,68,68,.3)}50%{box-shadow:0 0 25px rgba(239,68,68,.7)}}
+  @keyframes bounceIn{0%{transform:scale(.3);opacity:0}50%{transform:scale(1.05)}70%{transform:scale(.9)}100%{transform:scale(1);opacity:1}}
 
-.glass{background:rgba(255,255,255,.05);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.1)}
-.glass2{background:rgba(0,0,0,.3);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.07)}
+  .glass{background:rgba(255,255,255,.05);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.1)}
+  .glass2{background:rgba(0,0,0,.3);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.07)}
+  .fadeUp{animation:fadeUp .5s ease forwards}
+  .spin{animation:spin 1s linear infinite}
+  .float{animation:float 3s ease-in-out infinite}
+  .glow{animation:glow 2s ease-in-out infinite}
+  .bounce{animation:bounceIn .6s cubic-bezier(.36,.07,.19,.97) forwards}
 
-.fadeUp{animation:fadeUp .5s ease forwards}
-.spinner{animation:spin 1s linear infinite}
-.float{animation:float 3s ease-in-out infinite}
-.glow{animation:glow 2s ease-in-out infinite}
-.bounce{animation:bounceIn .6s cubic-bezier(.36,.07,.19,.97) forwards}
+  .btn-red{
+    background:linear-gradient(135deg,#ef4444,#dc2626);
+    transition:all .3s ease;
+    position:relative;overflow:hidden;
+  }
+  .btn-red:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(239,68,68,.5)}
+  .btn-red:active{transform:translateY(0)}
+  .btn-red::before{
+    content:'';position:absolute;top:0;left:-100%;
+    width:100%;height:100%;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);
+    transition:left .5s;
+  }
+  .btn-red:hover::before{left:100%}
 
-.shimmer{
-  background:linear-gradient(90deg,rgba(255,255,255,.03) 25%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.03) 75%);
-  background-size:800px 100%;animation:shimmer 1.8s infinite;
-}
+  .btn-purple{background:linear-gradient(135deg,#8b5cf6,#7c3aed);transition:all .3s ease}
+  .btn-purple:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(139,92,246,.5)}
 
-.btn-red{background:linear-gradient(135deg,#ef4444,#dc2626);transition:all .3s ease;position:relative;overflow:hidden}
-.btn-red:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(239,68,68,.5)}
-.btn-red:active{transform:translateY(0)}
-.btn-red::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);transition:left .5s}
-.btn-red:hover::before{left:100%}
-.btn-red:disabled{opacity:.6;cursor:not-allowed;transform:none}
+  .btn-green{background:linear-gradient(135deg,#22c55e,#16a34a);transition:all .3s ease}
+  .btn-green:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(34,197,94,.5)}
 
-.btn-purple{background:linear-gradient(135deg,#8b5cf6,#7c3aed);transition:all .3s ease}
-.btn-purple:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(139,92,246,.5)}
+  .btn-ghost{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);transition:all .3s ease}
+  .btn-ghost:hover{background:rgba(255,255,255,.12)}
 
-.btn-green{background:linear-gradient(135deg,#22c55e,#16a34a);transition:all .3s ease}
-.btn-green:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(34,197,94,.5)}
+  .input-url{
+    background:rgba(255,255,255,.07);
+    border:1px solid rgba(255,255,255,.12);
+    transition:all .3s ease;
+    color:white;
+  }
+  .input-url:focus{
+    outline:none;
+    border-color:#ef4444;
+    background:rgba(255,255,255,.1);
+    box-shadow:0 0 0 3px rgba(239,68,68,.1);
+  }
+  .input-url::placeholder{color:#6b7280}
 
-.btn-ghost{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);transition:all .3s ease}
-.btn-ghost:hover{background:rgba(255,255,255,.13)}
+  .stream-row{
+    background:rgba(0,0,0,.2);
+    border:1px solid rgba(255,255,255,.07);
+    border-radius:12px;
+    transition:all .25s ease;
+    cursor:pointer;
+  }
+  .stream-row:hover{
+    background:rgba(239,68,68,.08);
+    border-color:rgba(239,68,68,.3);
+    transform:translateX(3px);
+  }
 
-.url-input{
-  background:rgba(255,255,255,.07);
-  border:1px solid rgba(255,255,255,.12);
-  transition:all .3s ease;color:white;width:100%;
-}
-.url-input:focus{
-  outline:none;border-color:#ef4444;
-  background:rgba(255,255,255,.1);
-  box-shadow:0 0 0 3px rgba(239,68,68,.1);
-}
-.url-input::placeholder{color:#4b5563}
+  .tab-on{background:linear-gradient(135deg,#ef4444,#dc2626);color:white;box-shadow:0 4px 15px rgba(239,68,68,.3)}
+  .tab-off{background:rgba(255,255,255,.06);color:#9ca3af}
+  .tab-off:hover{background:rgba(255,255,255,.1);color:white}
 
-.stream-row{
-  background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.07);
-  border-radius:12px;transition:all .25s ease;cursor:pointer;
-}
-.stream-row:hover{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.3);transform:translateX(3px)}
+  .step-wait{background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.2);color:#6b7280}
+  .step-done{background:linear-gradient(135deg,#22c55e,#16a34a);border:2px solid #22c55e;color:white}
 
-.tab-on{background:linear-gradient(135deg,#ef4444,#dc2626);color:white;box-shadow:0 4px 15px rgba(239,68,68,.3)}
-.tab-off{background:rgba(255,255,255,.06);color:#9ca3af}
-.tab-off:hover{background:rgba(255,255,255,.1);color:white}
+  .grad-text{
+    background:linear-gradient(135deg,#ef4444,#f97316);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    background-clip:text;
+  }
 
-.step-wait{background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.2);color:#6b7280}
-.step-done{background:linear-gradient(135deg,#22c55e,#16a34a);border:2px solid #22c55e;color:white}
+  .thumb-wrap{position:relative;overflow:hidden;border-radius:12px}
+  .thumb-wrap img{transition:transform .3s ease;width:100%;object-fit:cover}
+  .thumb-wrap:hover img{transform:scale(1.05)}
 
-.grad-text{background:linear-gradient(135deg,#ef4444,#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  ::-webkit-scrollbar{width:4px;height:4px}
+  ::-webkit-scrollbar-track{background:rgba(0,0,0,.2)}
+  ::-webkit-scrollbar-thumb{background:#ef4444;border-radius:4px}
 
-.thumb-wrap{position:relative;overflow:hidden;border-radius:12px}
-.thumb-wrap img{transition:transform .3s ease;width:100%;object-fit:cover}
-.thumb-wrap:hover img{transform:scale(1.05)}
+  .shimmer{
+    background:linear-gradient(90deg,rgba(255,255,255,.03) 25%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.03) 75%);
+    background-size:800px 100%;
+    animation:shimmer 1.8s infinite;
+  }
+  @keyframes shimmer{0%{background-position:-800px 0}100%{background-position:800px 0}}
 
-::-webkit-scrollbar{width:4px;height:4px}
-::-webkit-scrollbar-track{background:rgba(0,0,0,.2)}
-::-webkit-scrollbar-thumb{background:#ef4444;border-radius:4px}
+  @media(max-width:480px){
+    .stream-row .row-right{flex-direction:column;align-items:flex-start;gap:8px}
+    .stream-row .row-right .dl-btn{width:100%}
+  }
 </style>
 </head>
 <body>
 
-<!-- NAVBAR -->
 <nav class="glass2 sticky top-0 z-50 border-b border-white/10">
   <div class="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
     <div class="flex items-center gap-3">
@@ -106,59 +132,48 @@ body{
     </div>
     <div id="ffmpeg-badge" class="flex items-center gap-2 text-xs sm:text-sm">
       <div class="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
-      <span class="text-yellow-400 hidden sm:inline">Checking FFmpeg...</span>
+      <span class="text-yellow-400 hidden sm:inline">Checking...</span>
     </div>
   </div>
 </nav>
 
-<!-- MAIN -->
 <main class="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-
-  <!-- Hero -->
   <div class="text-center mb-8 sm:mb-12 fadeUp">
-    <div class="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-5 bg-red-500/10 rounded-2xl sm:rounded-3xl border border-red-500/20 flex items-center justify-center float">
+    <div class="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 bg-red-500/10 rounded-2xl sm:rounded-3xl border border-red-500/20 flex items-center justify-center float">
       <i class="fab fa-youtube text-red-400 text-3xl sm:text-4xl"></i>
     </div>
-    <h1 class="text-3xl sm:text-5xl font-black mb-3 leading-tight">
+    <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black mb-3 leading-tight">
       Download <span class="grad-text">YouTube</span> Videos
     </h1>
     <p class="text-gray-400 text-sm sm:text-base max-w-md mx-auto">
-      🎬 Full HD 1080p &nbsp;•&nbsp; 🔥 4K &nbsp;•&nbsp; 🎵 Audio Only
+      🎬 Full HD 1080p &nbsp;•&nbsp; 🔥 4K Quality &nbsp;•&nbsp; 🎵 Audio Only
     </p>
   </div>
 
-  <!-- URL Input -->
   <div class="glass rounded-2xl p-5 sm:p-8 mb-6 fadeUp">
     <label class="block text-sm font-semibold text-gray-300 mb-3">
       <i class="fas fa-link text-red-400 mr-2"></i>Paste YouTube URL
     </label>
     <div class="flex flex-col sm:flex-row gap-3">
       <div class="relative flex-1">
-        <i class="fab fa-youtube absolute left-4 top-1/2 -translate-y-1/2 text-red-400/60 text-sm pointer-events-none"></i>
-        <input id="url-input" type="url"
-          placeholder="https://www.youtube.com/watch?v=..."
-          class="url-input pl-10 pr-10 py-3.5 sm:py-4 rounded-xl text-sm sm:text-base">
-        <button onclick="clearAll()"
-          class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 hover:text-red-400 transition-colors">
+        <i class="fab fa-youtube absolute left-4 top-1/2 -translate-y-1/2 text-red-400/60 text-sm"></i>
+        <input id="url-input" type="url" placeholder="https://www.youtube.com/watch?v=..." class="input-url w-full pl-10 pr-10 py-3.5 sm:py-4 rounded-xl text-sm sm:text-base">
+        <button onclick="clearAll()" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 hover:text-red-400 transition-colors">
           <i class="fas fa-times text-xs"></i>
         </button>
       </div>
-      <button id="fetch-btn" onclick="fetchInfo()"
-        class="btn-red px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 w-full sm:w-auto">
+      <button id="fetch-btn" onclick="fetchInfo()" class="btn-red px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 w-full sm:w-auto whitespace-nowrap">
         <i id="fetch-icon" class="fas fa-search text-sm"></i>
         <span id="fetch-text">Fetch Video</span>
       </button>
     </div>
-    <p class="text-gray-600 text-xs mt-2">
-      <i class="fas fa-keyboard mr-1"></i>Press Enter to fetch
-    </p>
+    <p class="text-gray-600 text-xs mt-2.5"><i class="fas fa-keyboard mr-1"></i>Press Enter to fetch</p>
   </div>
 
-  <!-- Loading -->
-  <div id="sec-loading" class="hidden glass rounded-2xl p-10 mb-6 text-center">
+  <div id="sec-loading" class="hidden glass rounded-2xl p-10 mb-6 text-center fadeUp">
     <div class="relative w-16 h-16 mx-auto mb-4">
       <div class="w-full h-full border-4 border-red-500/20 rounded-full"></div>
-      <div class="absolute inset-0 border-4 border-transparent border-t-red-500 rounded-full spinner"></div>
+      <div class="absolute inset-0 border-4 border-transparent border-t-red-500 rounded-full spin"></div>
     </div>
     <p class="text-white font-bold text-lg">Fetching video info...</p>
     <p class="text-gray-500 text-sm mt-1">Connecting to YouTube</p>
@@ -169,106 +184,80 @@ body{
     </div>
   </div>
 
-  <!-- Video Info -->
-  <div id="sec-info" class="hidden mb-6">
+  <div id="sec-info" class="hidden mb-6 fadeUp">
     <div class="glass rounded-2xl overflow-hidden">
-
-      <!-- Header -->
       <div class="p-5 sm:p-8">
         <div class="flex flex-col sm:flex-row gap-5 sm:gap-6">
-
-          <!-- Thumbnail -->
           <div class="thumb-wrap w-full sm:w-56 md:w-64 flex-shrink-0 h-40 sm:h-36 md:h-40">
-            <img id="v-thumb" src="" alt="thumb" class="h-full">
+            <img id="v-thumb" src="" alt="Thumbnail" class="h-full">
             <div class="absolute inset-0 bg-black/20 flex items-center justify-center">
               <div class="w-12 h-12 bg-red-600/90 rounded-full flex items-center justify-center border border-red-400/40">
                 <i class="fas fa-play text-white ml-1"></i>
               </div>
             </div>
-            <div id="v-dur-badge"
-              class="absolute bottom-2 right-2 bg-black/80 px-2 py-0.5 rounded text-xs font-mono"></div>
+            <div id="v-dur-badge" class="absolute bottom-2 right-2 bg-black/80 px-2 py-0.5 rounded text-xs font-mono"></div>
           </div>
-
-          <!-- Meta -->
           <div class="flex-1 min-w-0">
-            <h2 id="v-title"
-              class="text-base sm:text-lg font-bold text-white mb-3 leading-snug"
-              style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">
-            </h2>
+            <h2 id="v-title" class="text-base sm:text-lg font-bold text-white mb-3 leading-snug" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden"></h2>
             <div class="grid grid-cols-3 gap-2 sm:gap-3 mb-4">
               <div class="glass2 rounded-xl p-2.5 text-center">
-                <p class="text-gray-500 text-xs mb-0.5">Channel</p>
+                <p class="text-gray-500 text-xs mb-0.5"><i class="fas fa-user mr-1"></i>Channel</p>
                 <p id="v-author" class="text-white text-xs sm:text-sm font-bold truncate"></p>
               </div>
               <div class="glass2 rounded-xl p-2.5 text-center">
-                <p class="text-gray-500 text-xs mb-0.5">Duration</p>
+                <p class="text-gray-500 text-xs mb-0.5"><i class="fas fa-clock mr-1"></i>Duration</p>
                 <p id="v-duration" class="text-white text-xs sm:text-sm font-bold"></p>
               </div>
               <div class="glass2 rounded-xl p-2.5 text-center">
-                <p class="text-gray-500 text-xs mb-0.5">Views</p>
+                <p class="text-gray-500 text-xs mb-0.5"><i class="fas fa-eye mr-1"></i>Views</p>
                 <p id="v-views" class="text-white text-xs sm:text-sm font-bold"></p>
               </div>
             </div>
-            <!-- Quick buttons -->
             <div class="flex flex-col xs:flex-row gap-2">
-              <button onclick="startDownload('hd',null,'1080p')"
-                class="btn-red flex-1 py-2.5 px-5 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
-                <i class="fas fa-fire text-xs"></i>Full HD
+              <button onclick="startDownload('hd', null, '1080p')" class="btn-red flex-1 py-2.5 px-5 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
+                <i class="fas fa-fire text-xs"></i> Full HD
               </button>
-              <button onclick="startDownload('audio',null,null)"
-                class="btn-purple flex-1 py-2.5 px-5 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
-                <i class="fas fa-music text-xs"></i>Audio Only
+              <button onclick="startDownload('audio', null, null)" class="btn-purple flex-1 py-2.5 px-5 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
+                <i class="fas fa-music text-xs"></i> Audio Only
               </button>
             </div>
           </div>
         </div>
       </div>
-
-      <!-- Quality Selector -->
       <div class="border-t border-white/10 p-5 sm:p-8">
-        <h3 class="font-bold text-base sm:text-lg mb-5">
-          <i class="fas fa-sliders text-red-400 mr-2"></i>Choose Quality
-        </h3>
-
-        <!-- Tabs -->
+        <h3 class="font-bold text-base sm:text-lg mb-5"><i class="fas fa-sliders text-red-400 mr-2"></i>Choose Quality</h3>
         <div class="flex gap-2 mb-5 overflow-x-auto pb-1">
-          <button onclick="showTab('prog')" id="tab-prog"
-            class="tab-btn tab-on px-4 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap flex items-center gap-1.5 transition-all">
-            <i class="fas fa-video text-xs"></i>Video + Audio
+          <button onclick="showTab('prog')" id="tab-prog" class="tab-btn tab-on px-4 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap flex items-center gap-1.5 transition-all">
+            <i class="fas fa-video text-xs"></i> Video + Audio
           </button>
-          <button onclick="showTab('hd')" id="tab-hd"
-            class="tab-btn tab-off px-4 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap flex items-center gap-1.5 transition-all">
-            <i class="fas fa-fire text-xs"></i>HD / 4K
+          <button onclick="showTab('hd')" id="tab-hd" class="tab-btn tab-off px-4 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap flex items-center gap-1.5 transition-all">
+            <i class="fas fa-fire text-xs"></i> HD / 4K
           </button>
-          <button onclick="showTab('audio')" id="tab-audio"
-            class="tab-btn tab-off px-4 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap flex items-center gap-1.5 transition-all">
-            <i class="fas fa-music text-xs"></i>Audio
+          <button onclick="showTab('audio')" id="tab-audio" class="tab-btn tab-off px-4 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap flex items-center gap-1.5 transition-all">
+            <i class="fas fa-music text-xs"></i> Audio
           </button>
         </div>
-
-        <!-- Progressive -->
-        <div id="tab-prog-content">
-          <div class="flex gap-2 p-3 glass2 rounded-xl mb-4 border border-blue-500/20">
+        <div id="tab-content-prog">
+          <div class="flex items-start gap-2 p-3 glass2 rounded-xl mb-4 border border-blue-500/20">
             <i class="fas fa-info-circle text-blue-400 text-xs mt-0.5 flex-shrink-0"></i>
-            <p class="text-gray-400 text-xs">Direct download — video + audio combined (up to 720p)</p>
+            <p class="text-gray-400 text-xs">Direct download — video + audio in one file (up to 720p)</p>
           </div>
           <div id="list-prog" class="space-y-2"></div>
         </div>
-
-        <!-- HD -->
-        <div id="tab-hd-content" class="hidden">
-          <div class="flex gap-2 p-3 glass2 rounded-xl mb-4 border border-orange-500/20">
+        <div id="tab-content-hd" class="hidden">
+          <div class="flex items-start gap-2 p-3 glass2 rounded-xl mb-4 border border-orange-500/20">
             <i class="fas fa-info-circle text-orange-400 text-xs mt-0.5 flex-shrink-0"></i>
-            <p class="text-gray-400 text-xs">High quality — video merged with audio via FFmpeg (1080p, 4K)</p>
+            <p class="text-gray-400 text-xs">High quality video merged with audio via FFmpeg (1080p, 4K)</p>
           </div>
           <div id="list-hd" class="space-y-2"></div>
+          <div id="ffmpeg-warning" class="hidden mt-3 p-2 bg-red-500/10 border border-red-500/30 rounded-lg text-red-300 text-xs text-center">
+            ⚠️ FFmpeg is missing on the server. HD/4K downloads will fail. Install FFmpeg or use "Video + Audio" tab.
+          </div>
         </div>
-
-        <!-- Audio -->
-        <div id="tab-audio-content" class="hidden">
-          <div class="flex gap-2 p-3 glass2 rounded-xl mb-4 border border-purple-500/20">
+        <div id="tab-content-audio" class="hidden">
+          <div class="flex items-start gap-2 p-3 glass2 rounded-xl mb-4 border border-purple-500/20">
             <i class="fas fa-info-circle text-purple-400 text-xs mt-0.5 flex-shrink-0"></i>
-            <p class="text-gray-400 text-xs">Audio only — perfect for music and podcasts</p>
+            <p class="text-gray-400 text-xs">Extract audio only — great for music and podcasts</p>
           </div>
           <div id="list-audio" class="space-y-2"></div>
         </div>
@@ -276,52 +265,43 @@ body{
     </div>
   </div>
 
-  <!-- Progress -->
-  <div id="sec-progress" class="hidden glass rounded-2xl p-6 sm:p-8 mb-6">
+  <div id="sec-progress" class="hidden glass rounded-2xl p-6 sm:p-8 mb-6 fadeUp">
     <div class="flex items-center gap-4 mb-6">
       <div class="relative w-12 h-12 flex-shrink-0">
         <div class="w-full h-full border-4 border-red-500/20 rounded-full"></div>
-        <div class="absolute inset-0 border-4 border-transparent border-t-red-500 rounded-full spinner"></div>
+        <div class="absolute inset-0 border-4 border-transparent border-t-red-500 rounded-full spin"></div>
       </div>
       <div>
         <p class="font-bold text-lg">Downloading...</p>
-        <p id="prog-label" class="text-gray-400 text-sm">Please wait</p>
+        <p id="prog-label" class="text-gray-400 text-sm">Initializing</p>
       </div>
     </div>
-
     <div class="space-y-3 mb-6">
       <div id="step-1" class="flex items-center gap-3">
         <div class="step-wait w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all duration-500">1</div>
         <div class="flex-1">
           <p class="text-sm text-gray-400">Downloading Video</p>
-          <div class="h-1 bg-white/5 rounded-full mt-1 overflow-hidden">
-            <div id="bar-1" class="h-full bg-red-500 rounded-full transition-all duration-700 w-0"></div>
-          </div>
+          <div class="h-1 bg-white/5 rounded-full mt-1 overflow-hidden"><div id="bar-1" class="h-full bg-red-500 rounded-full transition-all duration-700 w-0"></div></div>
         </div>
       </div>
       <div id="step-2" class="flex items-center gap-3">
         <div class="step-wait w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all duration-500">2</div>
         <div class="flex-1">
           <p class="text-sm text-gray-400">Downloading Audio</p>
-          <div class="h-1 bg-white/5 rounded-full mt-1 overflow-hidden">
-            <div id="bar-2" class="h-full bg-red-500 rounded-full transition-all duration-700 w-0"></div>
-          </div>
+          <div class="h-1 bg-white/5 rounded-full mt-1 overflow-hidden"><div id="bar-2" class="h-full bg-red-500 rounded-full transition-all duration-700 w-0"></div></div>
         </div>
       </div>
       <div id="step-3" class="flex items-center gap-3">
         <div class="step-wait w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all duration-500">3</div>
         <div class="flex-1">
           <p class="text-sm text-gray-400">Merging with FFmpeg</p>
-          <div class="h-1 bg-white/5 rounded-full mt-1 overflow-hidden">
-            <div id="bar-3" class="h-full bg-red-500 rounded-full transition-all duration-700 w-0"></div>
-          </div>
+          <div class="h-1 bg-white/5 rounded-full mt-1 overflow-hidden"><div id="bar-3" class="h-full bg-red-500 rounded-full transition-all duration-700 w-0"></div></div>
         </div>
       </div>
     </div>
-
     <div class="glass2 rounded-xl p-3">
       <div class="flex justify-between text-xs text-gray-400 mb-2">
-        <span>Overall Progress</span>
+        <span>Overall</span>
         <span id="prog-pct" class="font-mono text-red-400 font-bold">0%</span>
       </div>
       <div class="bg-white/5 rounded-full h-2.5 overflow-hidden">
@@ -330,9 +310,7 @@ body{
     </div>
   </div>
 
-  <!-- Success -->
-  <div id="sec-success" class="hidden glass rounded-2xl p-8 sm:p-10 mb-6 border border-green-500/20"
-       style="box-shadow:0 0 30px rgba(34,197,94,.15)">
+  <div id="sec-success" class="hidden glass rounded-2xl p-8 sm:p-10 mb-6 border border-green-500/20 fadeUp" style="box-shadow:0 0 30px rgba(34,197,94,.15)">
     <div class="text-center">
       <div class="w-20 h-20 bg-green-500/15 rounded-full flex items-center justify-center mx-auto mb-5 border border-green-500/30 bounce">
         <i class="fas fa-check-circle text-green-400 text-4xl"></i>
@@ -340,20 +318,17 @@ body{
       <h3 class="text-2xl sm:text-3xl font-black mb-2">Download Complete! 🎉</h3>
       <p id="success-info" class="text-gray-400 text-sm mb-7"></p>
       <div class="flex flex-col sm:flex-row gap-3 justify-center">
-        <button onclick="saveFile()"
-          class="btn-green px-8 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
-          <i class="fas fa-download"></i>Save File
+        <button onclick="saveFile()" class="btn-green px-8 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
+          <i class="fas fa-download"></i> Save File
         </button>
-        <button onclick="clearAll()"
-          class="btn-ghost px-8 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
-          <i class="fas fa-plus"></i>Download Another
+        <button onclick="clearAll()" class="btn-ghost px-8 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
+          <i class="fas fa-plus"></i> Download Another
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Error -->
-  <div id="sec-error" class="hidden glass rounded-2xl p-5 mb-6 border border-red-500/20">
+  <div id="sec-error" class="hidden glass rounded-2xl p-5 mb-6 border border-red-500/20 fadeUp">
     <div class="flex items-start gap-3">
       <div class="w-10 h-10 bg-red-500/15 rounded-xl flex items-center justify-center flex-shrink-0 border border-red-500/20">
         <i class="fas fa-triangle-exclamation text-red-400"></i>
@@ -362,61 +337,49 @@ body{
         <p class="font-bold text-sm mb-1">Download Failed</p>
         <p id="error-msg" class="text-red-400 text-xs sm:text-sm break-words"></p>
       </div>
-      <button onclick="hide('sec-error')"
-        class="text-gray-600 hover:text-white w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all flex-shrink-0">
+      <button onclick="hide('sec-error')" class="text-gray-600 hover:text-white w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all flex-shrink-0">
         <i class="fas fa-times text-sm"></i>
       </button>
     </div>
   </div>
 
-  <!-- Features -->
   <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8">
     <div class="glass rounded-2xl p-5 sm:p-6 border border-white/8 hover:-translate-y-1 transition-all">
-      <div class="w-11 h-11 bg-red-500/15 rounded-xl flex items-center justify-center mb-4 border border-red-500/20">
-        <i class="fas fa-fire text-red-400"></i>
-      </div>
+      <div class="w-11 h-11 bg-red-500/15 rounded-xl flex items-center justify-center mb-4 border border-red-500/20"><i class="fas fa-fire text-red-400"></i></div>
       <h4 class="font-bold mb-1 text-sm sm:text-base">Full HD & 4K</h4>
-      <p class="text-gray-500 text-xs sm:text-sm">1080p Full HD or 4K with audio merged by FFmpeg</p>
+      <p class="text-gray-500 text-xs sm:text-sm">Download 1080p Full HD or 4K with crystal clear audio merged by FFmpeg</p>
     </div>
     <div class="glass rounded-2xl p-5 sm:p-6 border border-white/8 hover:-translate-y-1 transition-all">
-      <div class="w-11 h-11 bg-purple-500/15 rounded-xl flex items-center justify-center mb-4 border border-purple-500/20">
-        <i class="fas fa-music text-purple-400"></i>
-      </div>
+      <div class="w-11 h-11 bg-purple-500/15 rounded-xl flex items-center justify-center mb-4 border border-purple-500/20"><i class="fas fa-music text-purple-400"></i></div>
       <h4 class="font-bold mb-1 text-sm sm:text-base">Audio Only</h4>
-      <p class="text-gray-500 text-xs sm:text-sm">Extract audio from any YouTube video</p>
+      <p class="text-gray-500 text-xs sm:text-sm">Extract high quality audio from any YouTube video for offline listening</p>
     </div>
-    <div class="glass rounded-2xl p-5 sm:p-6 border border-white/8 hover:-translate-y-1 transition-all">
-      <div class="w-11 h-11 bg-blue-500/15 rounded-xl flex items-center justify-center mb-4 border border-blue-500/20">
-        <i class="fas fa-bolt text-blue-400"></i>
-      </div>
+    <div class="glass rounded-2xl p-5 sm:p-6 border border-white/8 hover:-translate-y-1 transition-all sm:col-span-1">
+      <div class="w-11 h-11 bg-blue-500/15 rounded-xl flex items-center justify-center mb-4 border border-blue-500/20"><i class="fas fa-bolt text-blue-400"></i></div>
       <h4 class="font-bold mb-1 text-sm sm:text-base">Fast & Free</h4>
-      <p class="text-gray-500 text-xs sm:text-sm">No signup, no limits. 100% free forever</p>
+      <p class="text-gray-500 text-xs sm:text-sm">Lightning fast downloads. No signup, no limits. 100% free forever</p>
     </div>
   </div>
 </main>
 
-<!-- Footer -->
 <footer class="glass2 border-t border-white/8 mt-12 py-8">
   <div class="max-w-5xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
     <div class="flex items-center gap-2">
-      <div class="w-7 h-7 bg-gradient-to-br from-red-500 to-red-700 rounded-lg flex items-center justify-center">
-        <i class="fab fa-youtube text-white text-xs"></i>
-      </div>
+      <div class="w-7 h-7 bg-gradient-to-br from-red-500 to-red-700 rounded-lg flex items-center justify-center"><i class="fab fa-youtube text-white text-xs"></i></div>
       <span class="font-bold text-sm">YTLoader</span>
     </div>
-    <p class="text-gray-600 text-xs">Python Flask + pytubefix + FFmpeg</p>
+    <p class="text-gray-600 text-xs text-center">Built with Python Flask + pytubefix + FFmpeg</p>
     <div class="flex items-center gap-3 text-gray-600 text-xs">
       <span><i class="fab fa-python text-blue-400 mr-1"></i>Python</span>
-      <span>•</span>
+      <span class="text-gray-700">•</span>
       <span><i class="fas fa-flask text-green-400 mr-1"></i>Flask</span>
-      <span>•</span>
+      <span class="text-gray-700">•</span>
       <span><i class="fas fa-film text-orange-400 mr-1"></i>FFmpeg</span>
     </div>
   </div>
 </footer>
 
-<!-- Toast -->
-<div id="toast" class="hidden fixed bottom-5 right-5 z-50">
+<div id="toast" class="hidden fixed bottom-5 right-5 z-50 fadeUp">
   <div class="glass2 border border-white/10 rounded-xl px-4 py-3 flex items-center gap-3 shadow-2xl min-w-48 max-w-72">
     <i id="toast-icon" class="fas fa-info-circle text-blue-400 flex-shrink-0"></i>
     <p id="toast-msg" class="text-white text-sm font-medium"></p>
@@ -424,424 +387,134 @@ body{
 </div>
 
 <script>
-// ════════════════════════════════════
-// State
-// ════════════════════════════════════
-const S = { url: '', filename: '', timer: null };
+let STATE = { url: '', filename: '', timer: null, ffmpegOk: false };
 
-// ════════════════════════════════════
-// Init
-// ════════════════════════════════════
-window.addEventListener('load', () => {
-  checkFFmpeg();
-  testRoutes();
-  if (window.innerWidth > 768) {
-    document.getElementById('url-input').focus();
-  }
-});
+window.addEventListener('load', () => { checkFFmpeg(); document.getElementById('url-input').focus(); });
 
-// ════════════════════════════════════
-// Test routes on startup
-// ════════════════════════════════════
-async function testRoutes() {
-  const r = await call('GET', '/api/test');
-  if (r && r.success) {
-    console.log('[ROUTES]', r.routes);
-    console.log('[FFMPEG]', r.ffmpeg);
-  } else {
-    console.error('[ROUTES] API test failed:', r);
-  }
-}
-
-// ════════════════════════════════════
-// Safe API Call
-// ════════════════════════════════════
-async function call(method, endpoint, body = null) {
+async function api(endpoint, method = 'GET', body = null) {
   try {
-    const opts = {
-      method,
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
-    };
+    const opts = { method, headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' } };
     if (body) opts.body = JSON.stringify(body);
-
-    console.log(`[API] ${method} ${endpoint}`, body || '');
-
-    const res  = await fetch(endpoint, opts);
+    const res = await fetch(endpoint, opts);
     const text = await res.text();
-
-    console.log(`[API] ${res.status} → ${text.substring(0, 200)}`);
-
-    if (!text || !text.trim()) {
-      return { success: false, error: `Empty response (HTTP ${res.status})` };
-    }
-
-    try {
-      const json = JSON.parse(text);
-      return json;
-    } catch (_) {
-      // HTML error page
-      const m = text.match(/<title>(.*?)<\/title>/i);
-      return {
-        success: false,
-        error: `Server error: ${m ? m[1] : text.substring(0, 100)}`
-      };
-    }
-
-  } catch (err) {
-    console.error('[API] Error:', err);
-    return { success: false, error: `Network error: ${err.message}` };
-  }
+    if (!text || !text.trim()) return { success: false, error: `Empty response (${res.status})` };
+    try { return JSON.parse(text); } catch(e) { return { success: false, error: `Invalid JSON` }; }
+  } catch(err) { return { success: false, error: `Server error: ${err.message}` }; }
 }
 
-// ════════════════════════════════════
-// Convert anything → string
-// ════════════════════════════════════
-function str(v) {
-  if (!v)                  return 'Unknown error';
-  if (typeof v === 'string') return v;
-  if (v instanceof Error)   return v.message;
-  if (typeof v === 'object') {
-    if (v.error)   return str(v.error);
-    if (v.message) return String(v.message);
-    try { return JSON.stringify(v); } catch(_) { return 'Unknown error'; }
-  }
-  return String(v);
+function toStr(val) {
+  if (!val) return 'Unknown error';
+  if (typeof val === 'string') return val;
+  if (val.error) return toStr(val.error);
+  if (val.message) return String(val.message);
+  try { return JSON.stringify(val); } catch(e) { return 'Unknown error'; }
 }
 
-// ════════════════════════════════════
-// Check FFmpeg
-// ════════════════════════════════════
 async function checkFFmpeg() {
+  const data = await api('/api/ffmpeg');
+  STATE.ffmpegOk = !!(data && data.ffmpeg);
   const el = document.getElementById('ffmpeg-badge');
-  const d  = await call('GET', '/api/ffmpeg');
-  if (d && d.ffmpeg) {
-    el.innerHTML = `
-      <div class="w-2 h-2 bg-green-400 rounded-full"></div>
-      <span class="text-green-400 text-xs sm:text-sm hidden sm:inline font-medium">FFmpeg ✓</span>
-    `;
+  if (STATE.ffmpegOk) {
+    el.innerHTML = `<div class="w-2 h-2 bg-green-400 rounded-full"></div><span class="text-green-400 text-xs sm:text-sm hidden sm:inline font-medium">FFmpeg ✓</span>`;
+    document.getElementById('ffmpeg-warning')?.classList.add('hidden');
   } else {
-    el.innerHTML = `
-      <div class="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
-      <span class="text-red-400 text-xs sm:text-sm hidden sm:inline">FFmpeg Missing</span>
-    `;
+    el.innerHTML = `<div class="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div><span class="text-red-400 text-xs sm:text-sm hidden sm:inline">FFmpeg Missing</span>`;
+    const warn = document.getElementById('ffmpeg-warning');
+    if (warn) warn.classList.remove('hidden');
   }
 }
 
-// ════════════════════════════════════
-// Fetch Video Info
-// ════════════════════════════════════
 async function fetchInfo() {
-  const input = document.getElementById('url-input');
-  const url   = input.value.trim();
-
-  if (!url) { toast('Enter a YouTube URL', 'error'); input.focus(); return; }
-  if (!url.includes('youtube.com') && !url.includes('youtu.be')) {
-    toast('Invalid YouTube URL', 'error'); return;
-  }
-
-  S.url = url;
-  hideAll();
-  show('sec-loading');
-  setFetchBtn(true);
-
-  const d = await call('POST', '/api/info', { url });
-
-  hide('sec-loading');
-  setFetchBtn(false);
-
-  if (d && d.success === true) {
-    renderInfo(d);
-    show('sec-info');
-    toast('Loaded!', 'success');
-  } else {
-    showErr(d);
-  }
+  const url = document.getElementById('url-input').value.trim();
+  if (!url) { toast('Enter a YouTube URL', 'error'); return; }
+  if (!url.includes('youtube.com') && !url.includes('youtu.be')) { toast('Invalid YouTube URL', 'error'); return; }
+  STATE.url = url;
+  hideAll(); show('sec-loading'); fetchBtn(true);
+  const data = await api('/api/info', 'POST', { url });
+  hide('sec-loading'); fetchBtn(false);
+  if (data && data.success) { renderInfo(data); show('sec-info'); toast('Video loaded!', 'success'); }
+  else showError(toStr(data));
 }
 
-// ════════════════════════════════════
-// Render Info
-// ════════════════════════════════════
 function renderInfo(d) {
-  try {
-    const $ = id => document.getElementById(id);
-    $('v-thumb').src          = d.thumbnail || '';
-    $('v-title').textContent   = d.title     || 'Unknown';
-    $('v-author').textContent  = d.author    || 'Unknown';
-    $('v-duration').textContent = d.duration || '0:00';
-    $('v-views').textContent   = d.views     || 'N/A';
-    $('v-dur-badge').textContent = d.duration || '';
-
-    buildList('list-prog',  d.progressive || [], 'progressive');
-    buildList('list-hd',    d.hd          || [], 'hd');
-    buildList('list-audio', d.audio       || [], 'audio');
-
-    showTab('prog');
-  } catch(e) {
-    console.error('[RENDER]', e);
-  }
+  document.getElementById('v-thumb').src = d.thumbnail || '';
+  document.getElementById('v-title').textContent = d.title || 'Unknown';
+  document.getElementById('v-author').textContent = d.author || 'Unknown';
+  document.getElementById('v-duration').textContent = d.duration || '0:00';
+  document.getElementById('v-views').textContent = d.views || 'N/A';
+  document.getElementById('v-dur-badge').textContent = d.duration || '';
+  buildStreams('list-prog', d.progressive || [], 'progressive');
+  buildStreams('list-hd', d.hd || [], 'hd');
+  buildStreams('list-audio', d.audio || [], 'audio');
+  showTab('prog');
 }
 
-// ════════════════════════════════════
-// Build Stream List
-// ════════════════════════════════════
-function buildList(id, streams, type) {
-  const el = document.getElementById(id);
+function buildStreams(containerId, streams, type) {
+  const el = document.getElementById(containerId);
   if (!el) return;
-  if (!streams.length) {
-    el.innerHTML = '<p class="text-gray-500 text-sm text-center py-6">No streams available</p>';
-    return;
-  }
-  el.innerHTML = [...streams].reverse().map(s => card(s, type)).join('');
+  if (!streams || streams.length === 0) { el.innerHTML = '<p class="text-gray-500 text-sm text-center py-6">No streams available</p>'; return; }
+  el.innerHTML = [...streams].reverse().map(s => streamCard(s, type)).join('');
 }
 
-function card(s, type) {
+function streamCard(s, type) {
   const cfg = {
-    progressive: {
-      icon: 'fas fa-video', ic: 'text-green-400',
-      bg: 'bg-green-500/10', bd: 'border-green-500/20',
-      btn: 'btn-red',
-      label: s.resolution || 'N/A',
-      sub: `${s.fps || 30}fps • MP4 • Audio ✅`,
-      fn: `startDownload('progressive',${s.itag},null)`
-    },
-    hd: {
-      icon: 'fas fa-fire', ic: 'text-red-400',
-      bg: 'bg-red-500/10', bd: 'border-red-500/20',
-      btn: 'btn-red',
-      label: `${s.resolution || 'HD'} ${
-        s.resolution==='2160p'?'🔥 4K':
-        s.resolution==='1440p'?'🔥 2K':
-        s.resolution==='1080p'?'🔥 HD':''}`,
-      sub: `${s.fps || 30}fps • FFmpeg Merge`,
-      fn: `startDownload('hd',null,'${s.resolution}')`
-    },
-    audio: {
-      icon: 'fas fa-music', ic: 'text-purple-400',
-      bg: 'bg-purple-500/10', bd: 'border-purple-500/20',
-      btn: 'btn-purple',
-      label: `${s.abr || 'N/A'} Audio`,
-      sub: 'MP4 Audio • High Quality',
-      fn: `startDownload('audio',null,null)`
-    }
+    progressive: { icon: 'fas fa-video', ic: 'text-green-400', bg: 'bg-green-500/10', border: 'border-green-500/20', btn: 'btn-red', label: s.resolution || 'N/A', sub: `${s.fps || 30}fps • MP4 • Audio ✅`, onclick: `startDownload('progressive',${s.itag},null)` },
+    hd: { icon: 'fas fa-fire', ic: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20', btn: 'btn-red', label: `${s.resolution || 'HD'} ${s.resolution === '2160p' ? '🔥 4K' : s.resolution === '1440p' ? '🔥 2K' : s.resolution === '1080p' ? '🔥 HD' : ''}`, sub: `${s.fps || 30}fps • FFmpeg Merge`, onclick: `startDownload('hd',null,'${s.resolution}')` },
+    audio: { icon: 'fas fa-music', ic: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20', btn: 'btn-purple', label: `${s.abr || 'N/A'} Audio`, sub: 'MP4 Audio • High Quality', onclick: `startDownload('audio',null,null)` }
   }[type];
-
-  return `
-    <div class="stream-row p-3 sm:p-4 flex flex-col xs:flex-row items-start xs:items-center gap-3"
-         onclick="${cfg.fn}">
-      <div class="w-10 h-10 ${cfg.bg} rounded-xl flex items-center justify-center border ${cfg.bd} flex-shrink-0">
-        <i class="${cfg.icon} ${cfg.ic} text-sm"></i>
-      </div>
-      <div class="flex-1 min-w-0">
-        <p class="text-white font-bold text-sm">${cfg.label}</p>
-        <p class="text-gray-500 text-xs mt-0.5">${cfg.sub}</p>
-      </div>
-      <div class="flex items-center gap-3 w-full xs:w-auto justify-between xs:justify-end">
-        <span class="text-gray-400 text-xs font-mono">${s.size || 0} MB</span>
-        <button class="${cfg.btn} px-4 py-2 rounded-xl text-xs font-bold text-white flex items-center gap-1.5"
-                onclick="event.stopPropagation();${cfg.fn}">
-          <i class="fas fa-download text-xs"></i>Download
-        </button>
-      </div>
-    </div>
-  `;
+  return `<div class="stream-row p-3 sm:p-4 flex flex-col xs:flex-row items-start xs:items-center gap-3" onclick="${cfg.onclick}">
+      <div class="w-10 h-10 ${cfg.bg} rounded-xl flex items-center justify-center border ${cfg.border} flex-shrink-0"><i class="${cfg.icon} ${cfg.ic} text-sm"></i></div>
+      <div class="flex-1 min-w-0"><p class="text-white font-bold text-sm">${cfg.label}</p><p class="text-gray-500 text-xs mt-0.5">${cfg.sub}</p></div>
+      <div class="row-right flex items-center gap-3 w-full xs:w-auto justify-between xs:justify-end"><span class="text-gray-400 text-xs font-mono flex-shrink-0">${s.size || 0} MB</span><button class="${cfg.btn} dl-btn px-4 py-2 rounded-xl text-xs font-bold text-white flex items-center gap-1.5 flex-shrink-0" onclick="${cfg.onclick}"><i class="fas fa-download text-xs"></i> Download</button></div>
+    </div>`;
 }
 
-// ════════════════════════════════════
-// Start Download
-// ════════════════════════════════════
 async function startDownload(type, itag, quality) {
-  if (!S.url) { toast('Fetch video first', 'error'); return; }
-
-  console.log(`[DL] type=${type} itag=${itag} quality=${quality}`);
-
-  hideAll();
-  show('sec-progress');
-  resetSteps();
-  startAnim(type);
-
-  const body = {
-    url:     S.url,
-    type:    String(type),
-    quality: String(quality || '1080p')
-  };
+  if (!STATE.url) { toast('Fetch video info first', 'error'); return; }
+  if (type === 'hd' && !STATE.ffmpegOk) { showError('FFmpeg is not installed on server. Cannot download HD/4K videos. Use "Video + Audio" tab.'); return; }
+  hideAll(); show('sec-progress'); resetSteps(); startAnim(type);
+  const body = { url: STATE.url, type: String(type), quality: String(quality || '1080p') };
   if (itag !== null && itag !== undefined) body.itag = Number(itag);
-
-  const label = {
-    hd:          `Downloading ${quality || '1080p'} with FFmpeg...`,
-    progressive: 'Downloading video with audio...',
-    audio:       'Downloading audio...'
-  }[type] || 'Downloading...';
-
-  const el = document.getElementById('prog-label');
-  if (el) el.textContent = label;
-
-  const d = await call('POST', '/api/download', body);
-
-  stopAnim();
-  hide('sec-progress');
-
-  console.log('[DL] Result:', d);
-
-  if (d && d.success === true) {
-    S.filename = String(d.filename || '');
-    const info = type === 'audio'
-      ? `🎵 ${d.filename} • ${d.bitrate || 'HQ'} • ${d.size}`
-      : `🎬 ${d.filename} • ${d.resolution || quality} • ${d.size}`;
-    const infoEl = document.getElementById('success-info');
-    if (infoEl) infoEl.textContent = info;
-    show('sec-success');
-    toast('Download complete! 🎉', 'success');
-  } else {
-    showErr(d);
-  }
+  document.getElementById('prog-label').textContent = { hd: `Downloading ${quality || '1080p'} with FFmpeg...`, progressive: 'Downloading video with audio...', audio: 'Downloading audio...' }[type] || 'Downloading...';
+  const data = await api('/api/download', 'POST', body);
+  stopAnim(); hide('sec-progress');
+  if (data && data.success === true) {
+    STATE.filename = String(data.filename || '');
+    const info = type === 'audio' ? `🎵 ${data.filename} • ${data.bitrate || 'N/A'} • ${data.size || ''}` : `🎬 ${data.filename} • ${data.resolution || quality || ''} • ${data.size || ''}`;
+    document.getElementById('success-info').textContent = info;
+    show('sec-success'); toast('Download complete! 🎉', 'success');
+  } else showError(toStr(data));
 }
 
-// ════════════════════════════════════
-// Save File
-// ════════════════════════════════════
-function saveFile() {
-  if (!S.filename) { toast('No file available', 'error'); return; }
-  toast('Saving file...', 'info');
-  window.location.href = `/api/file/${encodeURIComponent(S.filename)}`;
-}
+function saveFile() { if (!STATE.filename) { toast('No file ready', 'error'); return; } window.location.href = `/api/file/${encodeURIComponent(STATE.filename)}`; }
 
-// ════════════════════════════════════
-// Progress
-// ════════════════════════════════════
 function startAnim(type) {
   let pct = 0;
-  S.timer = setInterval(() => {
+  STATE.timer = setInterval(() => {
     if (pct >= 92) return;
-    pct = Math.min(pct + (pct < 35 ? 1.2 : pct < 70 ? 0.7 : 0.3), 92);
-    const b = document.getElementById('prog-bar');
-    const p = document.getElementById('prog-pct');
-    if (b) b.style.width = `${pct}%`;
-    if (p) p.textContent  = `${Math.round(pct)}%`;
+    const spd = pct < 35 ? 1.2 : pct < 70 ? 0.7 : 0.3;
+    pct = Math.min(pct + spd, 92);
+    const bar = document.getElementById('prog-bar'), pEl = document.getElementById('prog-pct');
+    if (bar) bar.style.width = `${pct}%`;
+    if (pEl) pEl.textContent = `${Math.round(pct)}%`;
     if (pct > 25) doneStep(1);
     if (pct > 55 && type !== 'audio') doneStep(2);
     if (pct > 82) doneStep(3);
   }, 130);
 }
-
-function stopAnim() {
-  clearInterval(S.timer); S.timer = null;
-  const b = document.getElementById('prog-bar');
-  const p = document.getElementById('prog-pct');
-  if (b) b.style.width = '100%';
-  if (p) p.textContent  = '100%';
-}
-
-function doneStep(n) {
-  const el  = document.getElementById(`step-${n}`);
-  const num = el && el.querySelector('div');
-  const bar = document.getElementById(`bar-${n}`);
-  if (num && !num.classList.contains('step-done')) {
-    num.className = 'step-done w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all duration-500';
-    num.innerHTML = '<i class="fas fa-check text-xs"></i>';
-  }
-  if (bar) bar.style.width = '100%';
-}
-
-function resetSteps() {
-  [1,2,3].forEach(n => {
-    const el  = document.getElementById(`step-${n}`);
-    const num = el && el.querySelector('div');
-    const bar = document.getElementById(`bar-${n}`);
-    if (num) { num.className = 'step-wait w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all duration-500'; num.textContent = n; }
-    if (bar) bar.style.width = '0%';
-  });
-  const b = document.getElementById('prog-bar');
-  const p = document.getElementById('prog-pct');
-  if (b) b.style.width = '0%';
-  if (p) p.textContent  = '0%';
-}
-
-// ════════════════════════════════════
-// Tabs
-// ════════════════════════════════════
-function showTab(name) {
-  ['prog','hd','audio'].forEach(t => {
-    const c = document.getElementById(`tab-${t}-content`);
-    const b = document.getElementById(`tab-${t}`);
-    if (c) c.classList.toggle('hidden', t !== name);
-    if (b) {
-      b.classList.remove('tab-on','tab-off');
-      b.classList.add(t === name ? 'tab-on' : 'tab-off');
-    }
-  });
-}
-
-// ════════════════════════════════════
-// UI Helpers
-// ════════════════════════════════════
-function show(id)  { const e = document.getElementById(id); if(e) e.classList.remove('hidden'); }
-function hide(id)  { const e = document.getElementById(id); if(e) e.classList.add('hidden'); }
+function stopAnim() { clearInterval(STATE.timer); STATE.timer = null; const bar = document.getElementById('prog-bar'); if(bar) bar.style.width='100%'; const pEl=document.getElementById('prog-pct'); if(pEl) pEl.textContent='100%'; }
+function doneStep(n) { const el = document.getElementById(`step-${n}`); const num = el && el.querySelector('div'); const bar = document.getElementById(`bar-${n}`); if (num && !num.classList.contains('step-done')) { num.className = 'step-done w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all duration-500'; num.innerHTML = '<i class="fas fa-check text-xs"></i>'; } if (bar) bar.style.width = '100%'; }
+function resetSteps() { [1,2,3].forEach(n=>{ const el=document.getElementById(`step-${n}`); const num=el&&el.querySelector('div'); const bar=document.getElementById(`bar-${n}`); if(num){num.className='step-wait w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all duration-500'; num.textContent=n;} if(bar)bar.style.width='0%'; }); const bar=document.getElementById('prog-bar'); if(bar)bar.style.width='0%'; const pEl=document.getElementById('prog-pct'); if(pEl)pEl.textContent='0%'; }
+function showTab(name) { ['prog','hd','audio'].forEach(t=>{ const content=document.getElementById(`tab-content-${t}`); const btn=document.getElementById(`tab-${t}`); if(content)content.classList.toggle('hidden',t!==name); if(btn){ btn.className=btn.className.replace('tab-on','tab-off').replace('tab-off','tab-off'); if(t===name)btn.className=btn.className.replace('tab-off','tab-on'); } }); }
+function show(id) { document.getElementById(id)?.classList.remove('hidden'); }
+function hide(id) { document.getElementById(id)?.classList.add('hidden'); }
 function hideAll() { ['sec-loading','sec-info','sec-progress','sec-success','sec-error'].forEach(hide); }
-
-function showErr(v) {
-  const msg = str(v);
-  const el  = document.getElementById('error-msg');
-  if (el) el.textContent = msg;
-  show('sec-error');
-  toast('Download failed', 'error');
-}
-
-function clearAll() {
-  const i = document.getElementById('url-input');
-  if (i) i.value = '';
-  hideAll();
-  S.url = ''; S.filename = '';
-}
-
-function setFetchBtn(loading) {
-  const btn  = document.getElementById('fetch-btn');
-  const icon = document.getElementById('fetch-icon');
-  const text = document.getElementById('fetch-text');
-  if (!btn) return;
-  btn.disabled      = loading;
-  btn.style.opacity = loading ? '0.7' : '1';
-  if (icon) icon.className = loading ? 'fas fa-spinner spinner text-sm' : 'fas fa-search text-sm';
-  if (text) text.textContent = loading ? 'Fetching...' : 'Fetch Video';
-}
-
-// ════════════════════════════════════
-// Toast
-// ════════════════════════════════════
-let _tt = null;
-function toast(msg, type = 'info') {
-  const el   = document.getElementById('toast');
-  const icon = document.getElementById('toast-icon');
-  const msgEl = document.getElementById('toast-msg');
-  if (!el) return;
-  const icons = {
-    success: 'fas fa-check-circle text-green-400',
-    error:   'fas fa-times-circle text-red-400',
-    info:    'fas fa-info-circle text-blue-400'
-  };
-  if (icon)  icon.className  = icons[type] || icons.info;
-  if (msgEl) msgEl.textContent = str(msg);
-  el.classList.remove('hidden');
-  clearTimeout(_tt);
-  _tt = setTimeout(() => el.classList.add('hidden'), 3500);
-}
-
-// ════════════════════════════════════
-// Events
-// ════════════════════════════════════
-document.addEventListener('DOMContentLoaded', () => {
-  const i = document.getElementById('url-input');
-  if (i) {
-    i.addEventListener('keydown', e => { if (e.key === 'Enter') fetchInfo(); });
-    i.addEventListener('paste', () => {
-      setTimeout(() => {
-        const v = i.value;
-        if (v.includes('youtube.com') || v.includes('youtu.be')) {
-          toast('YouTube URL detected!', 'info');
-        }
-      }, 80);
-    });
-  }
-});
+function showError(msg) { document.getElementById('error-msg').textContent = toStr(msg); show('sec-error'); toast('Download failed', 'error'); }
+function clearAll() { document.getElementById('url-input').value = ''; hideAll(); STATE.url = ''; STATE.filename = ''; }
+function fetchBtn(loading) { const btn=document.getElementById('fetch-btn'); if(!btn)return; btn.disabled=loading; btn.style.opacity=loading?'0.7':'1'; const icon=document.getElementById('fetch-icon'); if(icon)icon.className=loading?'fas fa-spinner spin text-sm':'fas fa-search text-sm'; const text=document.getElementById('fetch-text'); if(text)text.textContent=loading?'Fetching...':'Fetch Video'; }
+let toastTimer=null;
+function toast(msg,type='info') { const el=document.getElementById('toast'); const icon=document.getElementById('toast-icon'); const msgEl=document.getElementById('toast-msg'); if(!el||!icon||!msgEl)return; const icons={success:'fas fa-check-circle text-green-400',error:'fas fa-times-circle text-red-400',info:'fas fa-info-circle text-blue-400'}; icon.className=icons[type]||icons.info; msgEl.textContent=toStr(msg); el.classList.remove('hidden'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.add('hidden'),3500); }
+document.addEventListener('DOMContentLoaded',()=>{ const input=document.getElementById('url-input'); if(input){ input.addEventListener('keydown',e=>{if(e.key==='Enter')fetchInfo();}); input.addEventListener('paste',()=>{setTimeout(()=>{const v=input.value;if(v.includes('youtube.com')||v.includes('youtu.be'))toast('YouTube URL detected!','info');},80);});} });
 </script>
 </body>
 </html>
